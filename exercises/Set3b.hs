@@ -136,14 +136,15 @@ sorted (x_val:y_val:xs)
 --
 -- Use pattern matching and recursion (and the list constructors : and [])
 
+const_val_empty_list = []
 sumsOf :: [Int] -> [Int]
-sumsOf [] = []
-sumsOf [x] = [x]
-sumsOf (x:xs) = x : partialSumAddition x xs
+sumsOf [] = const_val_empty_list
+sumsOf [x_val] = [x_val]
+sumsOf (x_val:rem_part) = x_val : partialSumAddition x_val rem_part
 
 partialSumAddition :: Int -> [Int] -> [Int]
-partialSumAddition _ [] = []
-partialSumAddition acc (x:xs) = (acc + x) : partialSumAddition (acc + x) xs
+partialSumAddition _ [] = const_val_empty_list
+partialSumAddition acc (x_val:rem_part) = (acc + x_val) : partialSumAddition (acc + x_val) rem_part
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement the function merge that merges two sorted lists of
@@ -156,7 +157,18 @@ partialSumAddition acc (x:xs) = (acc + x) : partialSumAddition (acc + x) xs
 --   merge [1,1,6] [1,2]   ==> [1,1,1,2,6]
 
 merge :: [Int] -> [Int] -> [Int]
-merge xs ys = todo
+merge [] ys = ys
+merge xs [] = xs
+merge (x_val:xs) (y_val:ys)
+    | x_val <= y_val    = x_val : joinTailMerge xs (y_val:ys)
+    | otherwise = y_val : joinTailMerge (x_val:xs) ys
+
+joinTailMerge :: [Int] -> [Int] -> [Int]
+joinTailMerge [] ys = ys
+joinTailMerge xs [] = xs
+joinTailMerge (x_val:xs) (y_val:ys)
+    | x_val <= y_val    = x_val : joinTailMerge xs (y_val:ys)
+    | otherwise = y_val : joinTailMerge (x_val:xs) ys
 
 ------------------------------------------------------------------------------
 -- Ex 8: compute the biggest element, using a comparison function
@@ -180,7 +192,17 @@ merge xs ys = todo
 --     ==> ("Mouse",8)
 
 mymaximum :: (a -> a -> Bool) -> a -> [a] -> a
-mymaximum bigger initial xs = todo
+mymaximum section initial [] = initial
+mymaximum bigger initial (x_val:xs)
+    | bigger x_val initial = mymaximum bigger x_val xs
+    | otherwise = mymaximum bigger initial xs
+
+secondSectionComparison :: Ord b => (a, b) -> (a, b) -> Bool
+secondSectionComparison (_, b1) (_, b2) = b1 > b2
+
+firstSectionComparison :: Ord a => (a, b) -> (a, b) -> Bool
+firstSectionComparison (a1, _) (a2, _) = a1 > a2
+
 
 ------------------------------------------------------------------------------
 -- Ex 9: define a version of map that takes a two-argument function
@@ -194,7 +216,9 @@ mymaximum bigger initial xs = todo
 -- Use recursion and pattern matching. Do not use any library functions.
 
 map2 :: (a -> b -> c) -> [a] -> [b] -> [c]
-map2 f as bs = todo
+map2 f [] _ = const_val_empty_list
+map2 f _ [] = const_val_empty_list
+map2 f (x_val:xs_rem) (y_val:ys_rem) = f x_val y_val : map2 f xs_rem ys_rem
 
 ------------------------------------------------------------------------------
 -- Ex 10: implement the function maybeMap, which works a bit like a
@@ -218,4 +242,13 @@ map2 f as bs = todo
 --   ==> []
 
 maybeMap :: (a -> Maybe b) -> [a] -> [b]
-maybeMap f xs = todo
+maybeMap _ [] = const_val_empty_list
+maybeMap f (x_val:xs_listing) =
+    let result = case f x_val of
+                    Just y_val  -> [y_val]
+                    Nothing -> const_val_empty_list
+    in result `append` maybeMap f xs_listing
+
+append :: [a] -> [a] -> [a]
+append [] ys_listing = ys_listing
+append (x_val:xs_listing) ys_listing = x_val : append xs_listing ys_listing
