@@ -34,8 +34,17 @@ import Data.Array
 -- PS. check out the error message you get with your implementation if
 -- you remove the Eq a => constraint from the type!
 
+const_val_q1True = True
+const_val_q1False = False
 allEqual :: Eq a => [a] -> Bool
-allEqual xs = todo
+allEqual [] = const_val_q1True
+allEqual (x:xs) = checkForEquality x xs
+
+checkForEquality :: Eq a => a -> [a] -> Bool
+checkForEquality _ [] = const_val_q1True
+checkForEquality y (x:xs)
+    | y == x = checkForEquality y xs
+    | otherwise = const_val_q1False
 
 ------------------------------------------------------------------------------
 -- Ex 2: implement the function distinct which returns True if all
@@ -49,8 +58,11 @@ allEqual xs = todo
 --   distinct [1,1,2] ==> False
 --   distinct [1,2] ==> True
 
+const_val_q2True = True
+const_val_q2False = False
 distinct :: Eq a => [a] -> Bool
-distinct = todo
+distinct [] = const_val_q2True
+distinct (x_val:xs_listing) = not (elem x_val xs_listing) && distinct xs_listing
 
 ------------------------------------------------------------------------------
 -- Ex 3: implement the function middle that returns the middle value
@@ -63,7 +75,11 @@ distinct = todo
 --   middle 'b' 'a' 'c'  ==> 'b'
 --   middle 1 7 3        ==> 3
 
-middle = todo
+middle :: Ord a => a -> a -> a -> a
+middle a b c
+    | (b <= a && a <= c) || (c <= a && a <= b) = a
+    | (a <= b && b <= c) || (c <= b && b <= a) = b
+    | otherwise = c
 
 ------------------------------------------------------------------------------
 -- Ex 4: return the range of an input list, that is, the difference
@@ -78,8 +94,17 @@ middle = todo
 --   rangeOf [4,2,1,3]          ==> 3
 --   rangeOf [1.5,1.0,1.1,1.2]  ==> 0.5
 
-rangeOf :: [a] -> a
-rangeOf = todo
+const_str_q4_empty_list = "Empty list"
+const_val_q40 = 0
+const_val_q4True  = True
+const_val_q4False = False
+rangeOf :: (Num a, Ord a) => [a] -> a
+rangeOf [] = error const_str_q4_empty_list
+rangeOf [x] = 0
+rangeOf xs = let sorted = sort xs
+                 smallest = head sorted
+                 largest = last sorted
+             in largest - smallest
 
 ------------------------------------------------------------------------------
 -- Ex 5: given a (non-empty) list of (non-empty) lists, return the longest
@@ -97,7 +122,8 @@ rangeOf = todo
 --   longest [[1,2,3],[4,5],[6]] ==> [1,2,3]
 --   longest ["bcd","def","ab"] ==> "bcd"
 
-longest = todo
+longest :: Ord a => [[a]] -> [a]
+longest lists = foldr (\list acc -> if length list >= length acc && (length list > length acc || head list <= head acc) then list else acc) [] lists
 
 ------------------------------------------------------------------------------
 -- Ex 6: Implement the function incrementKey, that takes a list of
