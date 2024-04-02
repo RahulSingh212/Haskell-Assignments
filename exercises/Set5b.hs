@@ -150,19 +150,14 @@ mapSubtree mapperFunc (Node value leftSection rightSection) =
 --     ==> (Node 1 Empty
 --                 (Node 3 Empty Empty))
 
-removeNodesWithValue :: Eq a => a -> Tree a -> Tree a
-removeNodesWithValue _ Empty = Empty
-removeNodesWithValue val (Node value left right)
-  | val == value = Empty -- Remove the current node if its value matches the specified value
-  | otherwise = Node value (removeNodesWithValue val left) (removeNodesWithValue val right)
-
-removeEmptyNodes :: Tree a -> Tree a
-removeEmptyNodes Empty = Empty
-removeEmptyNodes (Node _ Empty Empty) = Empty -- Remove the current node if it's empty
-removeEmptyNodes (Node value left right) = Node value (removeEmptyNodes left) (removeEmptyNodes right)
+trimNodesAndSubnodes :: Eq a => a -> Tree a -> Tree a
+trimNodesAndSubnodes extra Empty = Empty
+trimNodesAndSubnodes val (Node value leftValue rightValue)
+  | val == value = Empty
+  | otherwise = Node value (trimNodesAndSubnodes val leftValue) (trimNodesAndSubnodes val rightValue)
 
 cull :: Eq a => a -> Tree a -> Tree a
-cull val tree = removeEmptyNodes $ removeNodesWithValue val tree
+cull val tree = trimNodesAndSubnodes val tree
 
 ------------------------------------------------------------------------------
 -- Ex 7: check if a tree is ordered. A tree is ordered if:
