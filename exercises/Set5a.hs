@@ -13,6 +13,7 @@ import Mooc.Todo
 --
 -- The constructors don't need any fields.
 
+data Vehicle = Bike | Bus | Tram | Train deriving Show
 
 ------------------------------------------------------------------------------
 -- Ex 2: Define the type BusTicket that can represent values like these:
@@ -20,6 +21,7 @@ import Mooc.Todo
 --  - MonthlyTicket "January"
 --  - MonthlyTicket "December"
 
+data BusTicket = SingleTicket | MonthlyTicket String deriving Show
 
 ------------------------------------------------------------------------------
 -- Ex 3: Here's the definition for a datatype ShoppingEntry that
@@ -29,14 +31,18 @@ import Mooc.Todo
 --
 -- Implement the functions totalPrice and buyOneMore below.
 
+const_val_q3_str_Apple = "Apple"
+const_val_q3_str_Banana = "Banana"
+const_val_q3_one = 1
+
 data ShoppingEntry = MkShoppingEntry String Double Int
   deriving Show
 
 threeApples :: ShoppingEntry
-threeApples = MkShoppingEntry "Apple" 0.5 3
+threeApples = MkShoppingEntry const_val_q3_str_Apple 0.5 3
 
 twoBananas :: ShoppingEntry
-twoBananas = MkShoppingEntry "Banana" 1.1 2
+twoBananas = MkShoppingEntry const_val_q3_str_Banana 1.1 2
 
 -- totalPrice should return the total price for an entry
 --
@@ -48,7 +54,7 @@ twoBananas = MkShoppingEntry "Banana" 1.1 2
 --   totalPrice twoBananas   ==> 2.2
 
 totalPrice :: ShoppingEntry -> Double
-totalPrice = todo
+totalPrice (MkShoppingEntry exVal price cntValue) = price * fromIntegral cntValue
 
 -- buyOneMore should increment the count in an entry by one
 --
@@ -56,7 +62,8 @@ totalPrice = todo
 --   buyOneMore twoBananas    ==> MkShoppingEntry "Banana" 1.1 3
 
 buyOneMore :: ShoppingEntry -> ShoppingEntry
-buyOneMore = todo
+buyOneMore (MkShoppingEntry name price cntValue) 
+  = MkShoppingEntry name price (cntValue + const_val_q3_one)
 
 ------------------------------------------------------------------------------
 -- Ex 4: define a datatype Person, which should contain the age (an
@@ -65,28 +72,26 @@ buyOneMore = todo
 -- Also define a Person value fred, and the functions getAge, getName,
 -- setAge and setName (see below).
 
-data Person = PersonUndefined
+const_val_q4_str_Fred = "Fred"
+const_val_q4_90 = 90
+
+data Person = Person { personName :: String, personAge :: Int }
   deriving Show
 
--- fred is a person whose name is Fred and age is 90
 fred :: Person
-fred = todo
+fred = Person { personName = const_val_q4_str_Fred, personAge = 90 }
 
--- getName returns the name of the person
 getName :: Person -> String
-getName p = todo
+getName = personName
 
--- getAge returns the age of the person
 getAge :: Person -> Int
-getAge p = todo
+getAge = personAge
 
--- setName takes a person and returns a new person with the name changed
 setName :: String -> Person -> Person
-setName name p = todo
+setName newName person = person { personName = newName }
 
--- setAge does likewise for age
 setAge :: Int -> Person -> Person
-setAge age p = todo
+setAge newAge person = person { personAge = newAge }
 
 ------------------------------------------------------------------------------
 -- Ex 5: define a datatype Position which contains two Int values, x
@@ -96,31 +101,34 @@ setAge age p = todo
 --   getY (up (up origin))    ==> 2
 --   getX (up (right origin)) ==> 1
 
-data Position = PositionUndefined
+const_val_q5_zero = 0
+const_val_q5_one = 1
 
--- origin is a Position value with x and y set to 0
+data Position = Position { xPos :: Int, yPos :: Int }
+  deriving (Show)
+
 origin :: Position
-origin = todo
+origin = Position { xPos = const_val_q5_zero, yPos = const_val_q5_zero }
 
--- getX returns the x of a Position
 getX :: Position -> Int
-getX = todo
+getX = xPos
 
--- getY returns the y of a position
 getY :: Position -> Int
-getY = todo
+getY = yPos
 
--- up increases the y value of a position by one
 up :: Position -> Position
-up = todo
+up pos = pos { yPos = yPos pos + const_val_q5_one }
 
--- right increases the x value of a position by one
 right :: Position -> Position
-right = todo
+right pos = pos { xPos = xPos pos + const_val_q5_one }
 
 ------------------------------------------------------------------------------
 -- Ex 6: Here's a datatype that represents a student. A student can
 -- either be a freshman, a nth year student, or graduated.
+
+const_val_q6_zero  = 0
+const_val_q6_one   = 1
+const_val_q6_seven = 7
 
 data Student = Freshman | NthYear Int | Graduated
   deriving (Show,Eq)
@@ -131,7 +139,12 @@ data Student = Freshman | NthYear Int | Graduated
 -- graduated student stays graduated even if he studies.
 
 study :: Student -> Student
-study = todo
+study Freshman = NthYear const_val_q6_one
+study (NthYear n) 
+  = if n < const_val_q6_seven 
+    then NthYear (n + const_val_q6_one) 
+    else Graduated
+study Graduated = Graduated
 
 ------------------------------------------------------------------------------
 -- Ex 7: define a datatype UpDown that represents a counter that can
@@ -150,25 +163,26 @@ study = todo
 -- get (tick (tick (toggle (tick zero))))
 --   ==> -1
 
-data UpDown = UpDownUndefined1 | UpDownUndefined2
+const_val_q7_zero  = 0
+const_val_q7_one   = 1
 
--- zero is an increasing counter with value 0
+data UpDown = Increasing Int | Decreasing Int
+  deriving (Show, Eq)
+
 zero :: UpDown
-zero = todo
+zero = Increasing const_val_q7_zero
 
--- get returns the counter value
 get :: UpDown -> Int
-get ud = todo
+get (Increasing nthValue) = nthValue
+get (Decreasing nthValue) = nthValue
 
--- tick increases an increasing counter by one or decreases a
--- decreasing counter by one
 tick :: UpDown -> UpDown
-tick ud = todo
+tick (Increasing nthValue) = Increasing (nthValue + const_val_q7_one)
+tick (Decreasing nthValue) = Decreasing (nthValue - const_val_q7_one)
 
--- toggle changes an increasing counter into a decreasing counter and
--- vice versa
 toggle :: UpDown -> UpDown
-toggle ud = todo
+toggle (Increasing nthValue) = Decreasing nthValue
+toggle (Decreasing nthValue) = Increasing nthValue
 
 ------------------------------------------------------------------------------
 -- Ex 8: you'll find a Color datatype below. It has the three basic
@@ -194,11 +208,32 @@ toggle ud = todo
 -- rgb (Invert (Mix Red (Mix Red Green))) ==> [0.25,0.75,1]
 -- rgb (Mix (Invert Red) (Invert Green))  ==> [0.5,0.5,1]
 
+const_val_q8_zero  = 0
+const_val_q8_one   = 1
+const_val_q8_two   = 2
+const_val_Red_List   = [const_val_q8_one, const_val_q8_zero, const_val_q8_zero]
+const_val_Green_List = [const_val_q8_zero, const_val_q8_one, const_val_q8_zero]
+const_val_Blue_List  = [const_val_q8_zero, const_val_q8_zero, const_val_q8_one]
+
 data Color = Red | Green | Blue | Mix Color Color | Invert Color
   deriving Show
 
+average :: Double -> Double -> Double
+average x y = (x + y) / const_val_q8_two
+
+mixColors :: [Double] -> [Double] -> [Double]
+mixColors [] [] = []
+mixColors (x_val:xsListing) (y_val:ysListing) = average x_val y_val : mixColors xsListing ysListing
+
+invertColors :: [Double] -> [Double]
+invertColors = map (\x_val -> const_val_q8_one - x_val)
+
 rgb :: Color -> [Double]
-rgb col = todo
+rgb Red   = const_val_Red_List
+rgb Green = const_val_Green_List
+rgb Blue  = const_val_Blue_List
+rgb (Mix c1 c2) = mixColors (rgb c1) (rgb c2)
+rgb (Invert c) = invertColors (rgb c)
 
 ------------------------------------------------------------------------------
 -- Ex 9: define a parameterized datatype OneOrTwo that contains one or
@@ -208,6 +243,8 @@ rgb col = todo
 --   One True         ::  OneOrTwo Bool
 --   Two "cat" "dog"  ::  OneOrTwo String
 
+data OneOrTwo a = One a | Two a a
+  deriving Show
 
 ------------------------------------------------------------------------------
 -- Ex 10: define a recursive datatype KeyVals for storing a set of
@@ -228,14 +265,21 @@ rgb col = todo
 -- Also define the functions toList and fromList that convert between
 -- KeyVals and lists of pairs.
 
-data KeyVals k v = KeyValsUndefined
+const_val_q10_zero  = 0
+const_val_q10_one   = 1
+const_val_q10_two   = 2
+const_val_q10_empty_list   = []
+
+data KeyVals k v = Empty | Pair k v (KeyVals k v)
   deriving Show
 
-toList :: KeyVals k v -> [(k,v)]
-toList = todo
+toList :: KeyVals k v -> [(k, v)]
+toList Empty = const_val_q10_empty_list
+toList (Pair k v rest) = (k, v) : toList rest
 
-fromList :: [(k,v)] -> KeyVals k v
-fromList = todo
+fromList :: [(k, v)] -> KeyVals k v
+fromList [] = Empty
+fromList ((k, v):kvs) = Pair k v (fromList kvs)
 
 ------------------------------------------------------------------------------
 -- Ex 11: The data type Nat is the so called Peano
@@ -248,14 +292,33 @@ fromList = todo
 --   toNat (-3) ==> Nothing
 --
 
+const_val_q11_zero  = 0
+const_val_q11_one   = 1
+const_val_q11_two   = 2
+const_val_q11_empty_list   = []
+
 data Nat = Zero | PlusOne Nat
-  deriving (Show,Eq)
+  deriving (Show, Eq)
 
 fromNat :: Nat -> Int
-fromNat n = todo
+fromNat nat = extractFromNat nat 0
+  where
+    extractFromNat :: Nat -> Int -> Int
+    extractFromNat Zero acc = acc
+    extractFromNat (PlusOne nthValue) acc = extractFromNat nthValue (acc + const_val_q11_one)
 
 toNat :: Int -> Maybe Nat
-toNat z = todo
+toNat z_val
+  | z_val < const_val_q11_zero = Nothing
+  | otherwise = Just (toNatHelper z_val)
+  where
+    toNatHelper :: Int -> Nat
+    toNatHelper 0 = Zero
+    toNatHelper nthValue = constructNat nthValue
+      where
+        constructNat :: Int -> Nat
+        constructNat 0 = Zero
+        constructNat nthValue = PlusOne (toNatHelper (nthValue - 1))
 
 ------------------------------------------------------------------------------
 -- Ex 12: While pleasingly simple in its definition, the Nat datatype is not
@@ -305,20 +368,34 @@ toNat z = todo
 -- Challenge: Can you implement toBin by directly converting its input into a
 -- sequence of bits instead of repeatedly applying inc?
 --
+
 data Bin = End | O Bin | I Bin
   deriving (Show, Eq)
 
--- This function increments a binary number by one.
-inc :: Bin -> Bin
-inc End   = I End
-inc (O b) = I b
-inc (I b) = O (inc b)
-
-prettyPrint :: Bin -> String
-prettyPrint = todo
-
+-- Convert a binary number to an integer
 fromBin :: Bin -> Int
-fromBin = todo
+fromBin bin = fromBinHelper bin 0
+  where
+    fromBinHelper :: Bin -> Int -> Int
+    fromBinHelper End acc     = acc
+    fromBinHelper (O b) acc   = fromBinHelper b (acc * 2)
+    fromBinHelper (I b) acc   = fromBinHelper b (acc * 2 + 1)
 
+-- Convert an integer to a binary number
 toBin :: Int -> Bin
-toBin = todo
+toBin n
+  | n < 0     = error "Negative numbers not supported"
+  | n == 0    = O End
+  | otherwise = toBinHelper n
+  where
+    toBinHelper :: Int -> Bin
+    toBinHelper 0 = End
+    toBinHelper n
+      | n `mod` 2 == 0 = O (toBinHelper (n `div` 2))
+      | otherwise      = I (toBinHelper (n `div` 2))
+
+-- Convert a binary number to a human-readable string
+prettyPrint :: Bin -> String
+prettyPrint End     = ""
+prettyPrint (O b)   = prettyPrint b ++ "0"
+prettyPrint (I b)   = prettyPrint b ++ "1"
