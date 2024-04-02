@@ -122,8 +122,13 @@ rangeOf xs = let sorted = sort xs
 --   longest [[1,2,3],[4,5],[6]] ==> [1,2,3]
 --   longest ["bcd","def","ab"] ==> "bcd"
 
+const_q4_empty_list = []
 longest :: Ord a => [[a]] -> [a]
-longest lists = foldr (\list acc -> if length list >= length acc && (length list > length acc || head list <= head acc) then list else acc) [] lists
+longest lists = foldr (\list acc -> 
+    if length list >= length acc && 
+        (length list > length acc 
+        || head list <= head acc) 
+        then list else acc) const_q4_empty_list lists
 
 ------------------------------------------------------------------------------
 -- Ex 6: Implement the function incrementKey, that takes a list of
@@ -139,8 +144,14 @@ longest lists = foldr (\list acc -> if length list >= length acc && (length list
 --   incrementKey True [(True,1),(False,3),(True,4)] ==> [(True,2),(False,3),(True,5)]
 --   incrementKey 'a' [('a',3.4)] ==> [('a',4.4)]
 
-incrementKey :: k -> [(k,v)] -> [(k,v)]
-incrementKey = todo
+const_q6_val_zero = 0
+const_q6_val_one = 1
+const_q6_empty_list = []
+incrementKey :: (Eq k, Num v) => k -> [(k, v)] -> [(k, v)]
+incrementKey _ [] = const_q6_empty_list
+incrementKey targetKey ((k,v):kvs)
+    | k == targetKey = (k, v + 1) : incrementKey targetKey kvs
+    | otherwise      = (k, v) : incrementKey targetKey kvs
 
 ------------------------------------------------------------------------------
 -- Ex 7: compute the average of a list of values of the Fractional
@@ -154,8 +165,13 @@ incrementKey = todo
 -- Hint! you can use the function fromIntegral to convert the list
 -- length to a Fractional
 
+const_q7_val_zero = 0
+const_q7_val_one = 1
 average :: Fractional a => [a] -> a
-average xs = todo
+average xs = total / count
+  where
+    total = foldl (+) 0 xs
+    count = fromIntegral $ foldl (\acc _ -> acc + const_q7_val_one) const_q7_val_zero xs
 
 ------------------------------------------------------------------------------
 -- Ex 8: given a map from player name to score and two players, return
@@ -173,8 +189,19 @@ average xs = todo
 --   winner (Map.fromList [("Mike",13607),("Bob",5899),("Lisa",5899)]) "Lisa" "Bob"
 --     ==> "Lisa"
 
+const_q8_val_zero = 0
+const_q8_val_one = 1
+
 winner :: Map.Map String Int -> String -> String -> String
-winner scores player1 player2 = todo
+winner scores p1 p2 = determineWinner scores p1 p2
+
+getPlayerScore :: Map.Map String Int -> String -> Int
+getPlayerScore scores player = Map.findWithDefault const_q8_val_zero player scores
+
+determineWinner :: Map.Map String Int -> String -> String -> String
+determineWinner scores p1 p2
+    | getPlayerScore scores p1 >= getPlayerScore scores p2 = p1
+    | otherwise = p2
 
 ------------------------------------------------------------------------------
 -- Ex 9: compute how many times each value in the list occurs. Return
@@ -188,8 +215,13 @@ winner scores player1 player2 = todo
 --   freqs [False,False,False,True]
 --     ==> Map.fromList [(False,3),(True,1)]
 
-freqs :: (Eq a, Ord a) => [a] -> Map.Map a Int
-freqs xs = todo
+const_q9_val_one = 1
+
+freqs :: (Ord a) => [a] -> Map.Map a Int
+freqs xs = foldr freqIncrement Map.empty xs
+
+freqIncrement :: Ord a => a -> Map.Map a Int -> Map.Map a Int
+freqIncrement key freqMap = Map.insertWith (+) key const_q9_val_one freqMap
 
 ------------------------------------------------------------------------------
 -- Ex 10: recall the withdraw example from the course material. Write a
@@ -216,8 +248,32 @@ freqs xs = todo
 --   transfer "Lisa" "Mike" 20 bank
 --     ==> fromList [("Bob",100),("Mike",50)]
 
+const_q10_val_zero = 0
+const_q10_val_one = 1
 transfer :: String -> String -> Int -> Map.Map String Int -> Map.Map String Int
-transfer from to amount bank = todo
+transfer from to amount bank
+    | not (checkAccoutExistance from bank) 
+        || not (checkAccoutExistance to bank) 
+        || not (verifyTransferAccount amount) 
+        || not (hasEnoughMoney (Map.findWithDefault const_q10_val_zero from bank) amount) = bank
+    | otherwise = performTransfer from to amount bank
+
+checkAccoutExistance :: String -> Map.Map String Int -> Bool
+checkAccoutExistance acc bank = Map.member acc bank
+
+verifyTransferAccount :: Int -> Bool
+verifyTransferAccount amount = amount > const_q10_val_zero
+
+hasEnoughMoney :: Int -> Int -> Bool
+hasEnoughMoney balance amount = balance >= amount
+
+performTransfer :: String -> String -> Int -> Map.Map String Int -> Map.Map String Int
+performTransfer from to amount bank =
+    let fromBalance = Map.findWithDefault const_q10_val_zero from bank
+        toBalance = Map.findWithDefault const_q10_val_zero to bank
+        newFromBalance = fromBalance - amount
+        newToBalance = toBalance + amount
+    in Map.adjust (const newFromBalance) from $ Map.adjust (const newToBalance) to bank
 
 ------------------------------------------------------------------------------
 -- Ex 11: given an Array and two indices, swap the elements in the indices.
@@ -227,7 +283,10 @@ transfer from to amount bank = todo
 --         ==> array (1,4) [(1,"one"),(2,"three"),(3,"two"),(4,"four")]
 
 swap :: Ix i => i -> i -> Array i a -> Array i a
-swap i j arr = todo
+swap i_idx j_idx arr = arr // [(i_idx, arr ! j_idx), (j_idx, arr ! i_idx)]
+
+swapIndices :: Ord i => i -> i -> (i, i)
+swapIndices i_idx j_idx = if i_idx <= j_idx then (i_idx, j_idx) else (j_idx, i_idx)
 
 ------------------------------------------------------------------------------
 -- Ex 12: given an Array, find the index of the largest element. You
@@ -238,4 +297,10 @@ swap i j arr = todo
 -- Hint: check out Data.Array.indices or Data.Array.assocs
 
 maxIndex :: (Ix i, Ord a) => Array i a -> i
-maxIndex = todo
+maxIndex arr = maxIndexFinder arr (assocs arr) (head $ indices arr)
+
+maxIndexFinder :: (Ix i, Ord a) => Array i a -> [(i, a)] -> i -> i
+maxIndexFinder _ [] maxIdx = maxIdx
+maxIndexFinder arr ((idx, val):xs) maxIdx
+    | val > arr ! maxIdx = maxIndexFinder arr xs idx
+    | otherwise = maxIndexFinder arr xs maxIdx
