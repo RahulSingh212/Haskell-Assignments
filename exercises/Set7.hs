@@ -123,7 +123,8 @@ const_val_q4_zero = 0
 const_val_q4_one = 1
 
 average :: Fractional a => NonEmpty a -> a
-average (x_val :| xsListing) = sumList (x_val : xsListing) / fromIntegral (lengthList (x_val : xsListing))
+average (x_val :| xsListing) 
+  = sumList (x_val : xsListing) / fromIntegral (lengthList (x_val : xsListing))
 
 sumList :: Num a => [a] -> a
 sumList = foldr (+) 0
@@ -152,7 +153,20 @@ reverseNonEmpty (x :| xs) = go (x :| []) xs
 -- velocity (Distance 50 <> Distance 10) (Time 1 <> Time 2)
 --    ==> Velocity 20
 
+newtype DistanceType = DistanceType Double deriving (Show)
 
+instance Semigroup DistanceType where
+  (DistanceType x) <> (DistanceType y) = DistanceType (x + y)
+
+newtype TimeType = TimeType Double deriving (Show)
+
+instance Semigroup TimeType where
+  (TimeType x) <> (TimeType y) = TimeType (x + y)
+
+newtype VelocityType = VelocityType Double deriving (Show)
+
+velocityFunc :: DistanceType -> TimeType -> VelocityType
+velocityFunc (DistanceType d) (TimeType t) = VelocityType (d / t)
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement a Monoid instance for the Set type from exercise 2.
@@ -199,31 +213,49 @@ instance Ord a => Monoid (Set a) where
 --   show2 (Subtract2 2 3) ==> "2-3"
 --   show2 (Multiply2 4 5) ==> "4*5"
 
+const_val_q8_zero = 0
+const_val_q8_one = 1
+const_val_q8_str_plus = "+"
+const_val_q8_str_minus = "-"
+const_val_q8_str_multiple = "*"
+
 data Operation1 = Add1 Int Int
                 | Subtract1 Int Int
+                | Multiply1 Int Int
   deriving Show
 
 compute1 :: Operation1 -> Int
-compute1 (Add1 i j) = i+j
-compute1 (Subtract1 i j) = i-j
+compute1 (Add1 i_idx j_idx) = i_idx + j_idx
+compute1 (Subtract1 i_idx j_idx) = i_idx - j_idx
+compute1 (Multiply1 i_idx j_idx) = i_idx * j_idx
 
 show1 :: Operation1 -> String
-show1 = todo
+show1 (Add1 i_idx j_idx) = show i_idx ++ const_val_q8_str_plus ++ show j_idx
+show1 (Subtract1 i_idx j_idx) = show i_idx ++ const_val_q8_str_minus ++ show j_idx
+show1 (Multiply1 i_idx j_idx) = show i_idx ++ const_val_q8_str_multiple ++ show j_idx
 
 data Add2 = Add2 Int Int
   deriving Show
 data Subtract2 = Subtract2 Int Int
   deriving Show
+data Multiply2 = Multiply2 Int Int
+  deriving Show
 
 class Operation2 op where
   compute2 :: op -> Int
+  show2 :: op -> String
 
 instance Operation2 Add2 where
-  compute2 (Add2 i j) = i+j
+  compute2 (Add2 i_idx j_idx) = i_idx + j_idx
+  show2 (Add2 i_idx j_idx) = show i_idx ++ const_val_q8_str_plus ++ show j_idx
 
 instance Operation2 Subtract2 where
-  compute2 (Subtract2 i j) = i-j
+  compute2 (Subtract2 i_idx j_idx) = i_idx - j_idx
+  show2 (Subtract2 i_idx j_idx) = show i_idx ++ const_val_q8_str_minus ++ show j_idx
 
+instance Operation2 Multiply2 where
+  compute2 (Multiply2 i_idx j_idx) = i_idx * j_idx
+  show2 (Multiply2 i_idx j_idx) = show i_idx ++ const_val_q8_str_multiple ++ show j_idx
 
 ------------------------------------------------------------------------------
 -- Ex 9: validating passwords. Below you'll find a type

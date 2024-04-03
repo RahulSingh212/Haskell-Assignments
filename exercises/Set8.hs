@@ -132,8 +132,33 @@ renderListExample = renderList justADot (9,11) (9,11)
 --      ["ff69b4","ff69b4","ff69b4"],
 --      ["000000","000000","000000"]]
 
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_two = 2
+const_val_q1_three = 3
+const_val_q1_four = 4
+const_val_q1_eight = 8
+const_val_q1_nine = 9
+
+drawDot :: Coord -> Color
+drawDot (Coord 3 4) = white
+drawDot extra       = black
+
+drawLine :: Int -> Int -> Color
+drawLine x_crd y_crd
+  | y_crd == const_val_q1_eight || (y_crd == const_val_q1_nine && x_crd == const_val_q1_three) = pink
+  | otherwise = black
+
 dotAndLine :: Picture
-dotAndLine = todo
+dotAndLine = Picture drawPixel
+  where
+    drawPixel :: Coord -> Color
+    drawPixel (Coord x_crd y_crd) = combineColors (drawDot (Coord x_crd y_crd)) (drawLine x_crd y_crd)
+
+    combineColors :: Color -> Color -> Color
+    combineColors (Color r1 g1 b1) (Color r2 g2 b2) = Color (max r1 r2) (max g1 g2) (max b1 b2)
+
+
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -165,11 +190,20 @@ dotAndLine = todo
 --          ["7f0000","ff7f7f","7f0000"],
 --          ["7f0000","7f0000","7f0000"]]
 
+const_val_q2_zero = 0
+const_val_q2_one = 1
+const_val_q2_two = 2
+
+averageColor :: Color -> Color -> Color
+averageColor (Color r1 g1 b1) (Color r2 g2 b2) = Color (avg r1 r2) (avg g1 g2) (avg b1 b2)
+  where
+    avg x y = (x + y) `div` const_val_q2_two
+
 blendColor :: Color -> Color -> Color
-blendColor = todo
+blendColor = averageColor
 
 combine :: (Color -> Color -> Color) -> Picture -> Picture -> Picture
-combine = todo
+combine blendFunc (Picture f1) (Picture f2) = Picture (\coord -> blendFunc (f1 coord) (f2 coord))
 
 ------------------------------------------------------------------------------
 
@@ -240,7 +274,15 @@ exampleCircle = fill red (circle 80 100 200)
 --        ["000000","000000","000000","000000","000000","000000"]]
 
 rectangle :: Int -> Int -> Int -> Int -> Shape
-rectangle x0 y0 w h = todo
+rectangle x0_crd y0_crd w h = Shape (withinBounds x0_crd y0_crd w h)
+
+withinBounds :: Int -> Int -> Int -> Int -> Coord -> Bool
+withinBounds x0_crd y0_crd w h (Coord x_crd y_crd) =
+  x_crd >= x0_crd 
+  && x_crd < x0_crd + w && y_crd >= y0_crd 
+  && y_crd < y0_crd + h
+
+
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -256,10 +298,17 @@ rectangle x0 y0 w h = todo
 -- shape.
 
 union :: Shape -> Shape -> Shape
-union = todo
+union (Shape shape1) (Shape shape2) = Shape (combineShapes shape1 shape2)
+  where
+    combineShapes :: (Coord -> Bool) -> (Coord -> Bool) -> Coord -> Bool
+    combineShapes shape1' shape2' coord = shape1' coord || shape2' coord
 
 cut :: Shape -> Shape -> Shape
-cut = todo
+cut shape1 shape2 = Shape (cutShapes (contains shape1) (contains shape2))
+  where
+    cutShapes :: (Int -> Int -> Bool) -> (Int -> Int -> Bool) -> Coord -> Bool
+    cutShapes contains1 contains2 (Coord x_crd y_crd) = contains1 x_crd y_crd && not (contains2 x_crd y_crd)
+
 ------------------------------------------------------------------------------
 
 -- Here's a snowman, built using union from circles and rectangles.
@@ -287,7 +336,17 @@ exampleSnowman = fill white snowman
 --        ["000000","000000","000000"]]
 
 paintSolid :: Color -> Shape -> Picture -> Picture
-paintSolid color shape base = todo
+paintSolid color shape basePicture = Picture (overlay color shape basePicture)
+
+overlay :: Color -> Shape -> Picture -> Coord -> Color
+overlay color shape (Picture baseFunction) coord =
+  if contains shape (getX coord) (getY coord)
+    then color
+    else baseFunction coord
+  where
+    getX (Coord x_val extra) = x_val
+    getY (Coord extra y_val) = y_val
+
 ------------------------------------------------------------------------------
 
 allWhite :: Picture
@@ -331,8 +390,67 @@ stripes a b = Picture f
 --       ["ffffff","ffffff","000000","000000","000000"],
 --       ["000000","000000","000000","000000","000000"]]
 
+const_val_q6_zero = 0
+const_val_q6_one = 1
+const_val_q6_two = 2
+const_val_q6_three = 3
+const_val_q6_four = 4
+const_val_q6_five = 5
+const_val_q6_six = 6
+const_val_q6_seven = 7
+const_val_q6_eight = 8
+const_val_q6_nine = 9
+const_val_q6_hundred = 100
+
 paint :: Picture -> Shape -> Picture -> Picture
-paint pat shape base = todo
+paint (Picture patternFunc) shape (Picture baseFunc) = Picture paintedFunc
+  where
+    paintedFunc coord = if isWithinShape coord
+                        then getPatternColor coord
+                        else getBaseColor coord
+
+    isWithinShape :: Coord -> Bool
+    isWithinShape (Coord x y) = contains shape x y
+
+    getPatternColor :: Coord -> Color
+    getPatternColor coord@(Coord x y)
+      | isWithinShape coord = patternFunc (Coord (x `mod` patternWidth) (y `mod` patternHeight))
+      | otherwise = baseFunc (Coord (x `div` const_val_q6_two) (y `div` const_val_q6_two))
+
+    getBaseColor :: Coord -> Color
+    getBaseColor = baseFunc
+
+    patternWidth :: Int
+    patternWidth = getWidth patternFunc
+
+    patternHeight :: Int
+    patternHeight = getHeight patternFunc
+
+getWidth :: (Coord -> Color) -> Int
+getWidth func = getX maxCoord + const_val_q6_one
+  where
+    maxCoord = maximumCoord func
+
+getHeight :: (Coord -> Color) -> Int
+getHeight func = getY maxCoord + const_val_q6_one
+  where
+    maxCoord = maximumCoord func
+
+maximumCoord :: (Coord -> Color) -> Coord
+maximumCoord func = Coord maxX maxY
+  where
+    maxX = maximum [x_val | x_val <- [0 .. maxX'], getColor (Coord x_val 0) /= black]
+    maxY = maximum [y_val | y_val <- [0 .. maxY'], getColor (Coord 0 y_val) /= black]
+    maxX' = const_val_q6_hundred
+    maxY' = const_val_q6_hundred
+    getColor = func
+
+getX :: Coord -> Int
+getX (Coord x_val extra) = x_val
+
+getY :: Coord -> Int
+getY (Coord extra y_val) = y_val
+
 ------------------------------------------------------------------------------
 
 -- Here's a patterned version of the snowman example. See it by running:
@@ -392,22 +510,66 @@ xy = Picture f
 -- The FlipXY transform should switch the x and y coordinates, i.e.
 -- map (10,15) to (15,10).
 
+const_val_q7_zero = 0
+const_val_q7_one = 1
+const_val_q7_two = 2
+const_val_q7_three = 3
+const_val_q7_four = 4
+const_val_q7_five = 5
+const_val_q7_six = 6
+const_val_q7_seven = 7
+const_val_q7_eight = 8
+const_val_q7_nine = 9
+const_val_q7_hundred = 100
+const_val_q7_str_Zoom = "Zoom "
+
+instance Show Zoom where
+  show (Zoom factor) = const_val_q7_str_Zoom ++ show factor
+
 data Fill = Fill Color
 
 instance Transform Fill where
-  apply = todo
+  apply (Fill color) _ = fillImage color
+
+fillImage :: Color -> Picture
+fillImage color = Picture (\_ -> color)
 
 data Zoom = Zoom Int
-  deriving Show
 
 instance Transform Zoom where
-  apply = todo
+  apply (Zoom factor) (Picture picFunc) 
+    = Picture (\(Coord x y) 
+      -> picFunc (Coord (x `div` factor) (y `div` factor)))
+
+zoomImage :: Int -> Picture -> Picture
+zoomImage factor (Picture picFunc) = 
+  Picture (\(Coord x y) 
+    -> picFunc (Coord (x * factor) (y * factor)))
 
 data Flip = FlipX | FlipY | FlipXY
-  deriving Show
+  deriving (Show)
 
 instance Transform Flip where
-  apply = todo
+  apply FlipXY = flipXYcordinate
+  apply FlipX = flipXcordinate
+  apply FlipY = flipYcordinate
+
+flipXYcordinate :: Picture -> Picture
+flipXYcordinate (Picture picFunc) 
+  = Picture (\(Coord x y) 
+    -> picFunc (Coord y x))
+
+flipXcordinate :: Picture -> Picture
+flipXcordinate (Picture picFunc) 
+  = Picture (\(Coord x y) 
+    -> picFunc (Coord (-x) y))
+
+flipYcordinate :: Picture -> Picture
+flipYcordinate (Picture picFunc) 
+  = Picture (\(Coord x y) 
+    -> picFunc (Coord x (-y)))
+
+
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -419,11 +581,54 @@ instance Transform Flip where
 --
 -- Hint: you might need a constraint on the instance
 
+-- Define constant values for clarity
+const_val_zero :: Int
+const_val_zero = 0
+
+const_val_one :: Int
+const_val_one = 1
+
+const_val_two :: Int
+const_val_two = 2
+
+const_val_hundred :: Int
+const_val_hundred = 100
+
+const_val_empty_list :: [a]
+const_val_empty_list = []
+
+const_val_bool_True :: Bool
+const_val_bool_True = True
+
+const_val_bool_False :: Bool
+const_val_bool_False = False
+
 data Chain a b = Chain a b
   deriving Show
 
-instance Transform (Chain a b) where
-  apply = todo
+canvasSize :: Int
+canvasSize = const_val_hundred
+
+allSameColor :: Picture -> Bool
+allSameColor (Picture f) 
+  = allEqual 
+    [f (Coord x y) | x <- [0..canvasSize], y <- [0..canvasSize]]
+
+allEqual :: Eq a => [a] -> Bool
+allEqual [] = const_val_bool_True
+allEqual (x:xs) = all (==x) xs
+
+applyChain :: (Transform a, Transform b) 
+  => Chain a b -> Picture -> Picture
+applyChain (Chain t1 t2) p
+  | allSameColor p' = p'
+  | otherwise = apply t2 p'
+  where p' = apply t1 p
+
+instance (Transform a, Transform b) 
+  => Transform (Chain a b) where
+  apply = applyChain
+
 ------------------------------------------------------------------------------
 
 -- Now we can redefine largeVerticalStripes using the above Transforms.
@@ -461,7 +666,23 @@ data Blur = Blur
   deriving Show
 
 instance Transform Blur where
-  apply = todo
+  apply extra (Picture f) = Picture (\coord -> averageColor $ map f (surroundingPoints coord))
+    where 
+        toCoord (x, y) = Coord x y
+        
+        surroundingPoints :: Coord -> [Coord]
+        surroundingPoints (Coord x y) = map toCoord [(x, y), (x-1, y), (x+1, y), (x, y-1), (x, y+1)]
+        
+        averageColor :: [Color] -> Color
+        averageColor [] = Color 0 0 0
+        averageColor colors = colorDistribution (foldr colorAddition (Color 0 0 0) colors) (length colors)
+
+        colorAddition :: Color -> Color -> Color
+        colorAddition (Color r1 g1 b1) (Color r2 g2 b2) = Color (r1 + r2) (g1 + g2) (b1 + b2)
+
+        colorDistribution :: Color -> Int -> Color
+        colorDistribution (Color r g b) n = Color (r `div` n) (g `div` n) (b `div` n)
+
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -475,11 +696,39 @@ instance Transform Blur where
 --        ["000000","141414","141414","141414","000000"],
 --        ["000000","000000","0a0a0a","000000","000000"]]
 
-data BlurMany = BlurMany Int
-  deriving Show
+const_val_q10_zero = 0
+const_val_q10_one = 1
+const_val_q10_two = 2
+
+newtype BlurMany = BlurMany Int
+  deriving (Show)
 
 instance Transform BlurMany where
-  apply = todo
+  apply (BlurMany n) picture
+    | n <= const_val_q10_zero = picture
+    | otherwise = applyMultipleTimes n picture
+
+applyMultipleTimes :: Int -> Picture -> Picture
+applyMultipleTimes n picture = foldr (.) id (replicate n applyBlur) picture
+
+applyBlur :: Picture -> Picture
+applyBlur (Picture f) = Picture (\coord -> averageColor $ map f (surroundCoords coord))
+  where 
+    toCoord (x, y) = Coord x y
+    
+    surroundCoords :: Coord -> [Coord]
+    surroundCoords (Coord x y) = map toCoord [(x, y), (x-const_val_q10_one, y), (x+const_val_q10_one, y), (x, y-const_val_q10_one), (x, y+const_val_q10_one)]
+    
+    averageColor :: [Color] -> Color
+    averageColor [] = Color const_val_q10_zero const_val_q10_zero const_val_q10_zero
+    averageColor colors = divideColor (foldr addColor (Color const_val_q10_zero const_val_q10_zero const_val_q10_zero) colors) (length colors)
+
+    addColor :: Color -> Color -> Color
+    addColor (Color r1 g1 b1) (Color r2 g2 b2) = Color (r1 + r2) (g1 + g2) (b1 + b2)
+
+    divideColor :: Color -> Int -> Color
+    divideColor (Color r g b) n = Color (r `div` n) (g `div` n) (b `div` n)
+
 ------------------------------------------------------------------------------
 
 -- Here's a blurred version of our original snowman. See it by running
