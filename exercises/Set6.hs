@@ -299,12 +299,12 @@ instance Addable [a] where
 
 instance Addable a => Addable (Maybe a) where
   zero = Nothing
-  add = addMaybe
+  add = checkForAddition
 
-addMaybe :: Addable a => Maybe a -> Maybe a -> Maybe a
-addMaybe Nothing y_val = y_val
-addMaybe x_val Nothing = x_val
-addMaybe (Just x_val) (Just y_val) = Just (add x_val y_val)
+checkForAddition :: Addable a => Maybe a -> Maybe a -> Maybe a
+checkForAddition Nothing y_val = y_val
+checkForAddition x_val Nothing = x_val
+checkForAddition (Just x_val) (Just y_val) = Just (add x_val y_val)
 
 ------------------------------------------------------------------------------
 -- Ex 12: cycling. Implement a type class Cycle that contains a
