@@ -7,6 +7,7 @@ import Data.List
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Monoid
 import Data.Semigroup
+import Data.List.NonEmpty ((<|))
 
 ------------------------------------------------------------------------------
 -- Ex 1: you'll find below the types Time, Distance and Velocity,
@@ -26,11 +27,11 @@ data Velocity = Velocity Double
 
 -- velocity computes a velocity given a distance and a time
 velocity :: Distance -> Time -> Velocity
-velocity = todo
+velocity (Distance d) (Time t) = Velocity (d / t)
 
 -- travel computes a distance given a velocity and a time
 travel :: Velocity -> Time -> Distance
-travel = todo
+travel (Velocity v) (Time t) = Distance (v * t)
 
 ------------------------------------------------------------------------------
 -- Ex 2: let's implement a simple Set datatype. A Set is a list of
@@ -47,17 +48,21 @@ travel = todo
 data Set a = Set [a]
   deriving (Show,Eq)
 
--- emptySet is a set with no elements
 emptySet :: Set a
-emptySet = todo
+emptySet = Set []
 
--- member tests if an element is in a set
 member :: Eq a => a -> Set a -> Bool
-member = todo
+member x (Set xs) = x `elem` xs
 
--- add a member to a set
-add :: a -> Set a -> Set a
-add = todo
+add :: Ord a => a -> Set a -> Set a
+add x (Set xs) = Set (insertInOrder x xs)
+
+insertInOrder :: Ord a => a -> [a] -> [a]
+insertInOrder x_val [] = [x_val]
+insertInOrder x_val (y_val:ysListing)
+  | x_val < y_val     = x_val : y_val : ysListing
+  | x_val == y_val   = y_val : ysListing
+  | otherwise = y_val : insertInOrder x_val ysListing
 
 ------------------------------------------------------------------------------
 -- Ex 3: a state machine for baking a cake. The type Event represents
@@ -114,8 +119,17 @@ bake events = go Start events
 --   average (1.0 :| [])  ==>  1.0
 --   average (1.0 :| [2.0,3.0])  ==>  2.0
 
+const_val_q4_zero = 0
+const_val_q4_one = 1
+
 average :: Fractional a => NonEmpty a -> a
-average = todo
+average (x_val :| xsListing) = sumList (x_val : xsListing) / fromIntegral (lengthList (x_val : xsListing))
+
+sumList :: Num a => [a] -> a
+sumList = foldr (+) 0
+
+lengthList :: [a] -> Int
+lengthList = foldr (\_ acc -> acc + const_val_q4_one) const_val_q4_zero
 
 ------------------------------------------------------------------------------
 -- Ex 5: reverse a NonEmpty list.
@@ -123,7 +137,10 @@ average = todo
 -- PS. The Data.List.NonEmpty type has been imported for you
 
 reverseNonEmpty :: NonEmpty a -> NonEmpty a
-reverseNonEmpty = todo
+reverseNonEmpty (x :| xs) = go (x :| []) xs
+  where
+    go acc [] = acc
+    go acc (y:ys) = go (y <| acc) ys
 
 ------------------------------------------------------------------------------
 -- Ex 6: implement Semigroup instances for the Distance, Time and
@@ -136,6 +153,7 @@ reverseNonEmpty = todo
 --    ==> Velocity 20
 
 
+
 ------------------------------------------------------------------------------
 -- Ex 7: implement a Monoid instance for the Set type from exercise 2.
 -- The (<>) operation should be the union of sets.
@@ -144,6 +162,23 @@ reverseNonEmpty = todo
 --
 -- What are the class constraints for the instances?
 
+instance Ord a => Semigroup (Set a) where
+  (Set xsListing) <> (Set ysListing) = Set (merge xsListing ysListing)
+    where
+      merge :: Ord a => [a] -> [a] -> [a]
+      merge [] ysListing = ysListing
+      merge xsListing [] = xsListing
+      merge (x_val:xsListing) (y_val:ysListing)
+        | x_val < y_val     = x_val : merge xsListing (y_val:ysListing)
+        | x_val == y_val    = x_val : merge xsListing ysListing
+        | otherwise = y_val : merge (x_val:xsListing) ysListing
+
+instance Ord a => Monoid (Set a) where
+  mempty = emptySet
+    where
+      emptySet = Set []
+
+  mappend = (<>)
 
 ------------------------------------------------------------------------------
 -- Ex 8: below you'll find two different ways of representing
@@ -208,16 +243,36 @@ instance Operation2 Subtract2 where
 --   passwordAllowed "p4ss" (And (ContainsSome "1234") (MinimumLength 5)) ==> False
 --   passwordAllowed "p4ss" (Or (ContainsSome "1234") (MinimumLength 5)) ==> True
 
+-- Define a new data type for password requirements
 data PasswordRequirement =
-  MinimumLength Int
-  | ContainsSome String    -- contains at least one of given characters
-  | DoesNotContain String  -- does not contain any of the given characters
-  | And PasswordRequirement PasswordRequirement -- and'ing two requirements
-  | Or PasswordRequirement PasswordRequirement  -- or'ing
+    MinimumLength Int
+  | ContainsSome String
+  | DoesNotContain String
+  | And PasswordRequirement PasswordRequirement
+  | Or PasswordRequirement PasswordRequirement
   deriving Show
 
+meetsMinimumLength :: String -> Int -> Bool
+meetsMinimumLength pwd minLen = length pwd >= minLen
+
+containsSome :: String -> String -> Bool
+containsSome pwd chars = not (null (filter (`elem` chars) pwd))
+
+doesNotContain :: String -> String -> Bool
+doesNotContain pwd chars = null (filter (`elem` chars) pwd)
+
+checkBothRequirements :: String -> PasswordRequirement -> PasswordRequirement -> Bool
+checkBothRequirements pwd req1 req2 = passwordAllowed pwd req1 && passwordAllowed pwd req2
+
+checkForEitherRequirement :: String -> PasswordRequirement -> PasswordRequirement -> Bool
+checkForEitherRequirement pwd req1 req2 = passwordAllowed pwd req1 || passwordAllowed pwd req2
+
 passwordAllowed :: String -> PasswordRequirement -> Bool
-passwordAllowed = todo
+passwordAllowed pwd (MinimumLength minLen) = meetsMinimumLength pwd minLen
+passwordAllowed pwd (ContainsSome chars) = containsSome pwd chars
+passwordAllowed pwd (DoesNotContain chars) = doesNotContain pwd chars
+passwordAllowed pwd (And req1 req2) = checkBothRequirements pwd req1 req2
+passwordAllowed pwd (Or req1 req2) = checkForEitherRequirement pwd req1 req2
 
 ------------------------------------------------------------------------------
 -- Ex 10: a DSL for simple arithmetic expressions with addition and
@@ -239,17 +294,28 @@ passwordAllowed = todo
 --     ==> "(3*(1+1))"
 --
 
-data Arithmetic = Todo
-  deriving Show
+const_val_q10_zero = 0
+const_val_q10_one = 1
+const_val_q10_str_plus     = "+"
+const_val_q10_str_multiply = "*"
+const_val_q10_str_bOpen  = "("
+const_val_q10_str_bClose = ")"
+const_val_q10_str_sentence1 = "Unsupported operation"
+
+data Arithmetic = Literal Integer | Operation String Arithmetic Arithmetic deriving Show
 
 literal :: Integer -> Arithmetic
-literal = todo
+literal = Literal
 
 operation :: String -> Arithmetic -> Arithmetic -> Arithmetic
-operation = todo
+operation = Operation
 
 evaluate :: Arithmetic -> Integer
-evaluate = todo
+evaluate (Literal x_val) = x_val
+evaluate (Operation "+" x_val y_val) = evaluate x_val + evaluate y_val
+evaluate (Operation "*" x_val y_val) = evaluate x_val * evaluate y_val
+evaluate (Operation extra1 extra2 extra3) = error const_val_q10_str_sentence1
 
 render :: Arithmetic -> String
-render = todo
+render (Literal x_val) = show x_val
+render (Operation op x_val y_val) = const_val_q10_str_bOpen ++ render x_val ++ op ++ render y_val ++ const_val_q10_str_bClose

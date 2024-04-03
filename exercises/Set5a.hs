@@ -5,6 +5,7 @@
 
 module Set5a where
 
+import Data.Char (digitToInt)
 import Mooc.Todo
 
 ------------------------------------------------------------------------------
@@ -369,33 +370,35 @@ toNat z_val
 -- sequence of bits instead of repeatedly applying inc?
 --
 
+const_val_q12_zero  = 0
+const_val_q12_one   = 1
+const_val_q12_two   = 2
+const_val_q12_empty_list   = []
+const_val_q12_str_empty = ""
+const_val_q12_str_zero = "0"
+const_val_q12_str_one  = "1"
+
 data Bin = End | O Bin | I Bin
   deriving (Show, Eq)
 
--- Convert a binary number to an integer
-fromBin :: Bin -> Int
-fromBin bin = fromBinHelper bin 0
-  where
-    fromBinHelper :: Bin -> Int -> Int
-    fromBinHelper End acc     = acc
-    fromBinHelper (O b) acc   = fromBinHelper b (acc * 2)
-    fromBinHelper (I b) acc   = fromBinHelper b (acc * 2 + 1)
-
--- Convert an integer to a binary number
-toBin :: Int -> Bin
-toBin n
-  | n < 0     = error "Negative numbers not supported"
-  | n == 0    = O End
-  | otherwise = toBinHelper n
-  where
-    toBinHelper :: Int -> Bin
-    toBinHelper 0 = End
-    toBinHelper n
-      | n `mod` 2 == 0 = O (toBinHelper (n `div` 2))
-      | otherwise      = I (toBinHelper (n `div` 2))
-
--- Convert a binary number to a human-readable string
 prettyPrint :: Bin -> String
-prettyPrint End     = ""
-prettyPrint (O b)   = prettyPrint b ++ "0"
-prettyPrint (I b)   = prettyPrint b ++ "1"
+prettyPrint bin = prettyPrint' bin ""
+  where
+    prettyPrint' :: Bin -> String -> String
+    prettyPrint' End acValue     = acValue
+    prettyPrint' (O xsListing) acValue  = prettyPrint' xsListing ('0' : acValue)
+    prettyPrint' (I xsListing) acValue  = prettyPrint' xsListing ('1' : acValue)
+
+fromBin :: Bin -> Int
+fromBin End = 0
+fromBin (O xsListing) = const_val_q12_two * fromBin xsListing
+fromBin (I xsListing) = const_val_q12_one + const_val_q12_two * fromBin xsListing
+
+toBin :: Int -> Bin
+toBin 0 = O End
+toBin n = go n
+  where
+    go 0 = End
+    go m
+      | even m    = O (go (m `div` const_val_q12_two))
+      | otherwise = I (go (m `div` const_val_q12_two))

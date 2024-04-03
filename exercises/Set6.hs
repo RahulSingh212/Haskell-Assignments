@@ -9,11 +9,22 @@ import Data.Char (toLower)
 -- Ex 1: define an Eq instance for the type Country below. You'll need
 -- to use pattern matching.
 
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_True = True
+const_val_q1_False = False
+
 data Country = Finland | Switzerland | Norway
   deriving Show
 
+-- Function to check if two countries are eq
+checkCountryEquality Finland Finland = const_val_q1_True
+checkCountryEquality Switzerland Switzerland = const_val_q1_True
+checkCountryEquality Norway Norway = const_val_q1_True
+checkCountryEquality extra1 extra2 = const_val_q1_False
+
 instance Eq Country where
-  (==) = todo
+  (==) = checkCountryEquality
 
 ------------------------------------------------------------------------------
 -- Ex 2: implement an Ord instance for Country so that
