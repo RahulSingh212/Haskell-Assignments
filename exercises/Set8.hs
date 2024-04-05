@@ -158,7 +158,6 @@ dotAndLine = Picture drawPixel
     combineColors :: Color -> Color -> Color
     combineColors (Color r1 g1 b1) (Color r2 g2 b2) = Color (max r1 r2) (max g1 g2) (max b1 b2)
 
-
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------

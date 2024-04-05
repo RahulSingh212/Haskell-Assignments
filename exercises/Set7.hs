@@ -95,14 +95,23 @@ insertInOrder x_val (y_val:ysListing)
 --   bake [AddEggs,AddFlour,Mix]  ==>  Error
 
 data Event = AddEggs | AddFlour | AddSugar | Mix | Bake
-  deriving (Eq,Show)
+  deriving (Eq, Show)
 
-data State = Start | Error | Finished
-  deriving (Eq,Show)
+data State = Start | AddingEggs | AddingFlour | SugarResults | Mixing | BakeResults | Finished | Error
+  deriving (Eq, Show)
 
-step = todo
+step :: State -> Event -> State
+step Error _ = Error
+step Finished _ = Finished
+step Start AddEggs = AddingEggs
+step AddingEggs AddFlour = AddingFlour
+step AddingEggs AddSugar = SugarResults
+step AddingFlour AddSugar = Mixing
+step SugarResults AddFlour = Mixing
+step Mixing Mix = BakeResults
+step BakeResults Bake = Finished
+step extra1 extra2 = Error
 
--- do not edit this
 bake :: [Event] -> State
 bake events = go Start events
   where go state [] = state
@@ -153,20 +162,14 @@ reverseNonEmpty (x :| xs) = go (x :| []) xs
 -- velocity (Distance 50 <> Distance 10) (Time 1 <> Time 2)
 --    ==> Velocity 20
 
-newtype DistanceType = DistanceType Double deriving (Show)
+instance Semigroup Distance where
+  (Distance x_val) <> (Distance y_val) = Distance (x_val + y_val)
 
-instance Semigroup DistanceType where
-  (DistanceType x) <> (DistanceType y) = DistanceType (x + y)
+instance Semigroup Time where
+  (Time x_val) <> (Time y_val) = Time (x_val + y_val)
 
-newtype TimeType = TimeType Double deriving (Show)
-
-instance Semigroup TimeType where
-  (TimeType x) <> (TimeType y) = TimeType (x + y)
-
-newtype VelocityType = VelocityType Double deriving (Show)
-
-velocityFunc :: DistanceType -> TimeType -> VelocityType
-velocityFunc (DistanceType d) (TimeType t) = VelocityType (d / t)
+instance Semigroup Velocity where
+  (Velocity x_val) <> (Velocity y_val) = Velocity (x_val + y_val)
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement a Monoid instance for the Set type from exercise 2.
