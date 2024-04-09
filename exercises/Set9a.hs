@@ -13,7 +13,10 @@ module Set9a where
 import Data.Char
 import Data.List
 import Data.Ord
-
+import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe)
+import Data.List (sortBy)
+import Data.Ord (comparing)
 import Mooc.Todo
 
 ------------------------------------------------------------------------------
@@ -25,8 +28,22 @@ import Mooc.Todo
 -- return "Holy moly!" if it is under 10, return "Piece of cake!".
 -- Otherwise return "Ok."
 
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_str1 = "Holy moly!"
+const_val_q1_str2 = "Piece of cake!"
+const_val_q1_str3 = "Ok."
+const_val_q1_str4 = "ELSE"
+
 workload :: Int -> Int -> String
-workload nExercises hoursPerExercise = todo
+workload nExercises hoursPerExercise
+  | totalHours < 10 = const_val_q1_str2
+  | totalHours > 100 = const_val_q1_str1
+  | totalHours >= 10 = const_val_q1_str3
+  | totalHours <= 100 = const_val_q1_str3
+  | otherwise = const_val_q1_str3
+  where 
+    totalHours = nExercises * hoursPerExercise
 
 ------------------------------------------------------------------------------
 -- Ex 2: Implement the function echo that builds a string like this:
@@ -38,8 +55,14 @@ workload nExercises hoursPerExercise = todo
 --
 -- Hint: use recursion
 
+const_val_q2_zero = 0
+const_val_q2_one = 1
+const_val_q2_empty_string = ""
+const_val_q2_str1 = ", "
+
 echo :: String -> String
-echo = todo
+echo [] = const_val_q2_empty_string
+echo (x_val:xsListing) = (x_val : xsListing) ++ const_val_q2_str1 ++ echo xsListing
 
 ------------------------------------------------------------------------------
 -- Ex 3: A country issues some banknotes. The banknotes have a serial
@@ -51,8 +74,22 @@ echo = todo
 -- Given a list of bank note serial numbers (strings), count how many
 -- are valid.
 
+const_val_q3_zero = 0
+const_val_q3_one = 1
+const_val_q3_two = 2
+const_val_q3_three = 3
+const_val_q3_four = 4
+const_val_q3_five = 5
+const_val_q3_six = 6
+
+isValidSerial :: String -> Bool
+isValidSerial serial = length serial >= const_val_q3_six && checkDigits serial
+
+checkDigits :: String -> Bool
+checkDigits serial = (serial !! const_val_q3_two == serial !! const_val_q3_four) || (serial !! const_val_q3_three == serial !! const_val_q3_five)
+
 countValid :: [String] -> Int
-countValid = todo
+countValid serials = length (filter isValidSerial serials)
 
 ------------------------------------------------------------------------------
 -- Ex 4: Find the first element that repeats two or more times _in a
@@ -63,8 +100,27 @@ countValid = todo
 --   repeated [1,2,2,3,3] ==> Just 2
 --   repeated [1,2,1,2,3,3] ==> Just 3
 
+const_val_q4_True = True
+const_val_q4_False = False
+const_val_q4_Nothing = Nothing
+
+hasRepeats :: Eq a => [a] -> Bool
+hasRepeats [] = const_val_q4_False
+hasRepeats [_] = const_val_q4_False
+hasRepeats (x:y:rest)
+  | x == y = True
+  | otherwise = hasRepeats (y:rest)
+
 repeated :: Eq a => [a] -> Maybe a
-repeated = todo
+repeated [] = const_val_q4_Nothing
+repeated xs
+  | hasRepeats xs = Just $ findRepeated xs
+  | otherwise = const_val_q4_Nothing
+
+findRepeated :: Eq a => [a] -> a
+findRepeated (x:y:rest)
+  | x == y = x
+  | otherwise = findRepeated (y:rest)
 
 ------------------------------------------------------------------------------
 -- Ex 5: A laboratory has been collecting measurements. Some of the
@@ -85,8 +141,26 @@ repeated = todo
 --   sumSuccess []
 --     ==> Left "no data"
 
+const_val_q5_True = True
+const_val_q5_False = False
+const_val_q5_str1 = "no data"
+
+hasSuccess :: [Either String Int] -> Bool
+hasSuccess = any isRight
+  where
+    isRight (Right extra1) = const_val_q5_True
+    isRight extra2 = const_val_q5_False
+
 sumSuccess :: [Either String Int] -> Either String Int
-sumSuccess = todo
+sumSuccess measurements
+  | hasSuccess measurements = Right $ sumSuccessValues measurements
+  | otherwise = Left const_val_q5_str1
+
+sumSuccessValues :: [Either String Int] -> Int
+sumSuccessValues = sum . catMaybes . map extractSuccess
+  where
+    extractSuccess (Right x_val) = Just x_val
+    extractSuccess extra = Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 6: A combination lock can either be open or closed. The lock
@@ -108,30 +182,30 @@ sumSuccess = todo
 --   isOpen (open "0000" (lock (changeCode "0000" (open "1234" aLock)))) ==> True
 --   isOpen (open "1234" (lock (changeCode "0000" (open "1234" aLock)))) ==> False
 
-data Lock = LockUndefined
+const_val_q6_True = True
+const_val_q6_False = False
+
+data Lock = ClosedLock String | OpenLock String
   deriving Show
 
--- aLock should be a locked lock with the code "1234"
 aLock :: Lock
-aLock = todo
+aLock = ClosedLock "1234"
 
--- isOpen returns True if the lock is open
 isOpen :: Lock -> Bool
-isOpen = todo
+isOpen (OpenLock extra) = const_val_q6_True
+isOpen extra = const_val_q6_False
 
--- open tries to open the lock with the given code. If the code is
--- wrong, nothing happens.
 open :: String -> Lock -> Lock
-open = todo
+open code (ClosedLock c) | code == c = OpenLock c
+open extra lock = lock
 
--- lock closes a lock. If the lock is already closed, nothing happens.
 lock :: Lock -> Lock
-lock = todo
+lock (OpenLock code) = ClosedLock code
+lock l = l
 
--- changeCode changes the code of an open lock. If the lock is closed,
--- nothing happens.
 changeCode :: String -> Lock -> Lock
-changeCode = todo
+changeCode setNewCode (OpenLock extra) = OpenLock setNewCode
+changeCode extra lock = lock
 
 ------------------------------------------------------------------------------
 -- Ex 7: Here's a type Text that just wraps a String. Implement an Eq
@@ -149,6 +223,14 @@ changeCode = todo
 data Text = Text String
   deriving Show
 
+excludeWhiteSpace :: String -> String
+excludeWhiteSpace = filter (not . isSpace)
+
+textEqual :: Text -> Text -> Bool
+textEqual (Text a_val) (Text b_val) = excludeWhiteSpace a_val == excludeWhiteSpace b_val
+
+instance Eq Text where
+  (==) = textEqual
 
 ------------------------------------------------------------------------------
 -- Ex 8: We can represent functions or mappings as lists of pairs.
@@ -181,8 +263,20 @@ data Text = Text String
 --     compose [("a","alpha"),("b","beta"),("c","gamma")] [("alpha",1),("beta",2),("omicron",15)]
 --       ==> [("a",1),("b",2)]
 
-compose :: (Eq a, Eq b) => [(a,b)] -> [(b,c)] -> [(a,c)]
-compose = todo
+const_val_q8_Nothing = Nothing
+
+findValue :: Eq a => a -> [(a, b)] -> Maybe b
+findValue extra1 [] = const_val_q8_Nothing
+findValue key ((k_val, value):rest)
+  | key == k_val = Just value
+  | otherwise = findValue key rest
+
+compose :: (Eq a, Eq b, Eq c) => [(a, b)] -> [(b, c)] -> [(a, c)]
+compose f g = mapMaybe composePair f
+  where
+    composePair (a, b) = case findValue b g of
+      Just c -> Just (a, c)
+      Nothing -> const_val_q8_Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 9: Reorder a list using a list of indices.
@@ -213,17 +307,25 @@ compose = todo
 --   permute ([1, 0, 2] `multiply` [0, 2, 1]) [9,3,5] ==> [5,9,3]
 --   permute ([0, 2, 1] `multiply` [1, 0, 2]) [9,3,5] ==> [3,5,9]
 
--- A type alias for index lists.
+const_val_q9_True = True
+const_val_q9_False = False
+const_val_q9_zero = 0
+const_val_q9_one = 1
+
 type Permutation = [Int]
 
--- Permuting a list with the identity permutation should change nothing.
 identity :: Int -> Permutation
-identity n = [0 .. n - 1]
+identity n = [const_val_q9_zero .. n - const_val_q9_one]
 
--- This function shows how permutations can be composed. Do not edit this
--- function.
-multiply :: Permutation -> Permutation -> Permutation
-multiply p q = map (\i -> p !! (q !! i)) (identity (length p))
+composePermutations :: Permutation -> Permutation -> Permutation
+composePermutations p q = map (\i -> p !! (q !! i)) (identity (length p))
 
 permute :: Permutation -> [a] -> [a]
-permute = todo
+permute indices values = map snd . sortBy (comparing fst) $ zip indices values
+
+permutationCompute :: [Permutation] -> [a] -> [a]
+permutationCompute [] values = values
+permutationCompute (p:ps) values = permutationCompute ps (permute p values)
+
+multiply :: Permutation -> Permutation -> Permutation
+multiply p_val q_val = map (\idx -> p_val !! (q_val !! idx)) (identity (length p_val))
