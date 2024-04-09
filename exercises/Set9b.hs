@@ -47,10 +47,10 @@ type Col   = Int
 type Coord = (Row, Col)
 
 nextRow :: Coord -> Coord
-nextRow (i,j) = todo
+nextRow (row, _) = (row + 1, 1)
 
 nextCol :: Coord -> Coord
-nextCol (i,j) = todo
+nextCol (row, col) = (row, col + 1)
 
 --------------------------------------------------------------------------------
 -- Ex 2: Implement the function prettyPrint that, given the size of
@@ -379,8 +379,21 @@ step = todo
 -- After this, it's just a matter of calling `finish n [(1,1)]` to
 -- solve the n queens problem.
 
+const_val_q9_True = True
+const_val_q9_False = False
+const_val_q9_zero = 0
+const_val_q9_one = 1
+
 finish :: Size -> Stack -> Stack
-finish = todo
+finish size stack
+  | length stack > size = tail stack
+  | otherwise = finish size (takeStep size stack)
 
 solve :: Size -> Stack
-solve n = finish n [(1,1)]
+solve size = finish size [(const_val_q9_one, const_val_q9_one)]
+
+takeStep :: Size -> Stack -> Stack
+takeStep size stack = 
+    if length stack > size 
+        then tail stack 
+        else takeStep size (step size stack)
