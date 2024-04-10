@@ -3,6 +3,7 @@ module Set9b where
 import Mooc.Todo
 
 import Data.List
+import Data.Maybe (fromMaybe, isJust, fromJust)
 
 --------------------------------------------------------------------------------
 -- Ex 1: In this exercise set, we'll solve the N Queens problem step by step.
@@ -42,15 +43,33 @@ import Data.List
 -- the roles of different function arguments clearer without adding syntactical
 -- overhead:
 
+const_val_q1_True = True
+const_val_q1_False = False
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_eight = 8
+const_val_q1_ten = 10
+const_val_q1_empty_list = []
+
 type Row   = Int
 type Col   = Int
 type Coord = (Row, Col)
 
+addOne :: Int -> Int
+addOne x = x + const_val_q1_one
+
+maxColsForRow :: Row -> Col
+maxColsForRow row
+    | even row  = const_val_q1_eight
+    | otherwise = const_val_q1_ten
+
 nextRow :: Coord -> Coord
-nextRow (row, _) = (row + 1, 1)
+nextRow (row, extra) = (addOne row, const_val_q1_one)
 
 nextCol :: Coord -> Coord
-nextCol (row, col) = (row, col + 1)
+nextCol (row, col)
+    | col < maxColsForRow row = (row, addOne col)
+    | otherwise = (row, addOne col)
 
 --------------------------------------------------------------------------------
 -- Ex 2: Implement the function prettyPrint that, given the size of
@@ -100,10 +119,29 @@ nextCol (row, col) = (row, col + 1)
 -- takes O(n^3) time. Just ignore the previous sentence, if you're not familiar
 -- with the O-notation.)
 
+const_val_q2_True = True
+const_val_q2_False = False
+const_val_q2_zero = 0
+const_val_q2_one = 1
+const_val_q2_empty_list = []
+const_val_q2_new_line = '\n'
+const_val_q2_str_Q = 'Q'
+const_val_q2_str_Dot = '.'
+
 type Size = Int
 
 prettyPrint :: Size -> [Coord] -> String
-prettyPrint = todo
+prettyPrint size queens = generateBoard size const_val_q2_one const_val_q2_one ""
+    where
+        generateBoard :: Size -> Int -> Int -> String -> String
+        generateBoard size row col board
+            | row > size = reverse board
+            | col > size = generateBoard size 
+                (row + const_val_q2_one) const_val_q2_one (const_val_q2_new_line : board)
+            | (row, col) `elem` queens = generateBoard size 
+                row (col + const_val_q2_one) (const_val_q2_str_Q : board)
+            | otherwise = generateBoard size 
+                row (col + const_val_q2_one) (const_val_q2_str_Dot : board)
 
 --------------------------------------------------------------------------------
 -- Ex 3: The task in this exercise is to define the relations sameRow, sameCol,
@@ -126,17 +164,23 @@ prettyPrint = todo
 --   sameAntidiag (2,10) (5,7) ==> True
 --   sameAntidiag (500,5) (5,500) ==> True
 
-sameRow :: Coord -> Coord -> Bool
-sameRow (i,j) (k,l) = todo
+getDifference :: Int -> Int -> Int
+getDifference val1 val2 = val1 - val2
+
+compareDigit :: Int -> Int -> Bool
+compareDigit a b = a == b
 
 sameCol :: Coord -> Coord -> Bool
-sameCol (i,j) (k,l) = todo
+sameCol (i, j) (k, l) = compareDigit j l
+
+sameRow :: Coord -> Coord -> Bool
+sameRow (i, j) (k, l) = compareDigit (getDifference i k) 0
 
 sameDiag :: Coord -> Coord -> Bool
-sameDiag (i,j) (k,l) = todo
+sameDiag (i, j) (k, l) = compareDigit (getDifference i k) (getDifference j l)
 
 sameAntidiag :: Coord -> Coord -> Bool
-sameAntidiag (i,j) (k,l) = todo
+sameAntidiag (i, j) (k, l) = compareDigit (getDifference (getDifference i k) (getDifference l j)) 0
 
 --------------------------------------------------------------------------------
 -- Ex 4: In chess, a queen may capture another piece in the same row, column,
@@ -188,10 +232,17 @@ sameAntidiag (i,j) (k,l) = todo
 -- https://en.wikipedia.org/wiki/Stack_(abstract_data_type)
 
 type Candidate = Coord
-type Stack     = [Coord]
+type Stack = [Coord]
 
 danger :: Candidate -> Stack -> Bool
-danger = todo
+danger candidate queens = any (identifyDangerZone candidate) queens
+
+identifyDangerZone :: Candidate -> Coord -> Bool
+identifyDangerZone (x, y) (qx, qy) 
+    = sameRow (x, y) (qx, qy) 
+    || sameCol (x, y) (qx, qy) 
+    || sameDiag (x, y) (qx, qy) 
+    || sameAntidiag (x, y) (qx, qy)
 
 --------------------------------------------------------------------------------
 -- Ex 5: In this exercise, the task is to write a modified version of
@@ -225,8 +276,37 @@ danger = todo
 -- (For those that did the challenge in exercise 2, there's probably no O(n^2)
 -- solution to this version. Any working solution is okay in this exercise.)
 
+const_val_q5_True = True
+const_val_q5_False = False
+const_val_q5_zero = 0
+const_val_q5_one = 1
+const_val_q5_empty_list = []
+const_val_q5_new_line = '\n'
+const_val_q5_str_Q = 'Q'
+const_val_q5_str_Hash = '#'
+const_val_q5_str_Dot = '.'
+
 prettyPrint2 :: Size -> Stack -> String
-prettyPrint2 = todo
+prettyPrint2 size queens = concatMap (\row -> printRow size queens row ++ "\n") [1..size]
+
+printRow :: Size -> Stack -> Row -> String
+printRow size queens row = map (\col -> printSquare queens (row, col)) [1..size]
+
+printSquare :: Stack -> Coord -> Char
+printSquare queens coord@(row, col)
+  | coord `elem` queens = const_val_q5_str_Q
+  | inDangerZone queens coord = const_val_q5_str_Hash
+  | otherwise = const_val_q5_str_Dot
+
+inDangerZone :: Stack -> Coord -> Bool
+inDangerZone queens coord = any (isThreatenedBy coord) queens
+
+isThreatenedBy :: Coord -> Coord -> Bool
+isThreatenedBy (cx, cy) (qx, qy) =
+  compareDigit cx qx 
+  || compareDigit cy qy 
+  || compareDigit (abs (getDifference cx qx)) (abs (getDifference cy qy))
+
 
 --------------------------------------------------------------------------------
 -- Ex 6: Now that we can check if a piece can be safely placed into a square in
@@ -270,8 +350,52 @@ prettyPrint2 = todo
 --     ####Q###
 --     Q#######
 
+const_val_q6_True = True
+const_val_q6_False = False
+const_val_q6_zero = 0
+const_val_q6_one = 1
+const_val_q6_neg_one = -1
+const_val_q6_empty_list = []
+const_val_q6_new_line = '\n'
+const_val_q6_str_Q = 'Q'
+const_val_q6_str_Hash = '#'
+const_val_q6_str_Dot = '.'
+
+getAddResults :: Int -> Int -> Int
+getAddResults val add_val = val + add_val
+
+getLessThanResults :: Int -> Int -> Bool
+getLessThanResults a b = a < b
+
+getGreaterThanResults :: Int -> Int -> Bool
+getGreaterThanResults a b = a > b
+
+getCol :: Coord -> Int
+getCol  (extra, col) = col
+
+getRow :: Coord -> Int
+getRow (row, extra) = row
+
 fixFirst :: Size -> Stack -> Maybe Stack
-fixFirst n s = todo
+fixFirst size [] = Just const_val_q6_empty_list
+fixFirst size (queen:queens)
+  | getCol queen > size || getRow queen > size = Nothing
+  | not $ danger queen queens = Just (queen:queens)
+  | otherwise = tryNextPosition queen size queens
+
+tryNextPosition :: Coord -> Size -> Stack -> Maybe Stack
+tryNextPosition queen size queens =
+  let nextQueen = nextPosition queen size
+  in if nextQueen == (const_val_q6_neg_one, const_val_q6_neg_one)
+        then Nothing
+        else if not $ danger nextQueen queens
+                then Just (nextQueen:queens)
+                else tryNextPosition nextQueen size queens
+
+nextPosition :: Coord -> Size -> Coord
+nextPosition (row, col) size
+  | getLessThanResults col size = (row, getAddResults col const_val_q6_one)
+  | otherwise = (const_val_q6_neg_one, const_val_q6_neg_one)
 
 --------------------------------------------------------------------------------
 -- Ex 7: We need two helper functions for stack management.
@@ -292,11 +416,28 @@ fixFirst n s = todo
 --
 -- Hint: Remember nextRow and nextCol? Use them!
 
+const_val_q7_True = True
+const_val_q7_False = False
+const_val_q7_zero = 0
+const_val_q7_one = 1
+const_val_q7_neg_one = -1
+const_val_q7_empty_list = []
+const_val_q7_new_line = '\n'
+const_val_q7_str_Q = 'Q'
+const_val_q7_str_Hash = '#'
+const_val_q7_str_Dot = '.'
+const_val_q7_str1 = "Cannot continue: empty stack"
+const_val_q7_str2 = "Can't backtrack: empty stack"
+const_val_q7_str3 = "Can't backtrack: one element stack"
+
 continue :: Stack -> Stack
-continue s = todo
+continue [] = error const_val_q7_str1
+continue ((x_val, y_val):stack) = (getAddResults x_val const_val_q7_one, const_val_q7_one) : (x_val, y_val) : stack
 
 backtrack :: Stack -> Stack
-backtrack s = todo
+backtrack [] = error const_val_q7_str2
+backtrack [_] = error const_val_q7_str3
+backtrack ((x_val, extra):(pxListing, py):rest) = (pxListing, getAddResults py const_val_q7_one) : rest
 
 --------------------------------------------------------------------------------
 -- Ex 8: Let's take a step. Our algorithm solves the problem (in a
@@ -364,8 +505,36 @@ backtrack s = todo
 --     step 8 [(5,1),(4,2),(3,5),(2,3),(1,1)] ==> [(6,1),(5,4),(4,2),(3,5),(2,3),(1,1)]
 --     step 8 [(6,1),(5,4),(4,2),(3,5),(2,3),(1,1)] ==> [(5,5),(4,2),(3,5),(2,3),(1,1)]
 
+const_val_q8_True = True
+const_val_q8_False = False
+const_val_q8_zero = 0
+const_val_q8_one = 1
+const_val_q8_neg_one = -1
+const_val_q8_empty_list = []
+const_val_q8_str1 = "Unexpected: No new stack found when a safe position is found."
+
+isSafe :: Size -> Stack -> Bool
+isSafe size stack = not $ any (\q -> danger q (filter (/= q) stack)) stack
+
+handleFound :: Size -> Stack -> Stack
+handleFound size stack =
+  case fixFirst size stack of
+    Just newStack -> continue newStack
+    Nothing -> error const_val_q8_str1
+
+handleNotFound :: Stack -> Stack
+handleNotFound stack = backtrack stack
+
 step :: Size -> Stack -> Stack
-step = todo
+step extra [] = const_val_q8_empty_list
+step size stack@(top:extra) =
+  let 
+    found = fixFirst size stack
+    action = 
+        if isJust found 
+        then handleFound size stack 
+        else handleNotFound stack
+  in action
 
 --------------------------------------------------------------------------------
 -- Ex 9: Let's solve our puzzle! The function finish takes a partial
@@ -383,17 +552,19 @@ const_val_q9_True = True
 const_val_q9_False = False
 const_val_q9_zero = 0
 const_val_q9_one = 1
+const_val_q9_neg_one = -1
+const_val_q9_empty_list = []
 
 finish :: Size -> Stack -> Stack
-finish size stack
-  | length stack > size = tail stack
-  | otherwise = finish size (takeStep size stack)
+finish nthValue stDeck = solve' nthValue stDeck const_val_q9_empty_list
+  where
+    solve' :: Size -> Stack -> Stack -> Stack
+    solve' nthValue [] ccValue = ccValue
+    solve' n stDeck@(top:extra) ccValue
+      | length stDeck == (getAddResults nthValue const_val_q9_one) = tail stDeck
+      | otherwise = solve' nthValue stackNextValue (ccValue ++ stackNextValue)
+      where
+        stackNextValue = step nthValue stDeck
 
 solve :: Size -> Stack
-solve size = finish size [(const_val_q9_one, const_val_q9_one)]
-
-takeStep :: Size -> Stack -> Stack
-takeStep size stack = 
-    if length stack > size 
-        then tail stack 
-        else takeStep size (step size stack)
+solve nthValue = finish nthValue [(const_val_q9_one,const_val_q9_one)]
