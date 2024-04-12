@@ -7,7 +7,6 @@ import System.IO
 
 import Mooc.Todo
 
-
 ------------------------------------------------------------------------------
 -- Ex 1: Given an IORef String and a list of Strings, update the value
 -- in the IORef by appending to it all the strings in the list, in
@@ -19,8 +18,20 @@ import Mooc.Todo
 --   *Set11b> readIORef r
 --   "xfoobarquux"
 
+const_val_q1_True = True
+const_val_q1_False = False
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_empty_list = []
+
+appendString :: IORef String -> String -> IO ()
+appendString ref str = modifyIORef ref (++ str)
+
+appendStrings :: IORef String -> [String] -> IO ()
+appendStrings ref strings = mapM_ (appendString ref) strings
+
 appendAll :: IORef String -> [String] -> IO ()
-appendAll = todo
+appendAll ref strings = appendStrings ref strings
 
 ------------------------------------------------------------------------------
 -- Ex 2: Given two IORefs, swap the values stored in them.
@@ -34,8 +45,21 @@ appendAll = todo
 --   *Set11b> readIORef y
 --   "x"
 
+const_val_q2_True = True
+const_val_q2_False = False
+const_val_q2_zero = 0
+const_val_q2_one = 1
+const_val_q2_empty_list = []
+
+swapValues :: IORef a -> IORef a -> IO ()
+swapValues ref1 ref2 = do
+  val1 <- readIORef ref1
+  val2 <- readIORef ref2
+  writeIORef ref1 val2
+  writeIORef ref2 val1
+
 swapIORefs :: IORef a -> IORef a -> IO ()
-swapIORefs = todo
+swapIORefs ref1 ref2 = swapValues ref1 ref2
 
 ------------------------------------------------------------------------------
 -- Ex 3: sometimes one bumps into IO operations that return IO
@@ -61,7 +85,7 @@ swapIORefs = todo
 --        replicateM l getLine
 
 doubleCall :: IO (IO a) -> IO a
-doubleCall op = todo
+doubleCall op = op >>= id
 
 ------------------------------------------------------------------------------
 -- Ex 4: implement the analogue of function composition (the (.)
@@ -80,7 +104,7 @@ doubleCall op = todo
 --   3. return the result (of type b)
 
 compose :: (a -> IO b) -> (c -> IO a) -> c -> IO b
-compose op1 op2 c = todo
+compose f g x = g x >>= f
 
 ------------------------------------------------------------------------------
 -- Ex 5: Reading lines from a file. The module System.IO defines
@@ -110,7 +134,9 @@ compose op1 op2 c = todo
 --   ["module Set11b where","","import Control.Monad"]
 
 hFetchLines :: Handle -> IO [String]
-hFetchLines = todo
+hFetchLines h = do
+  contents <- hGetContents h
+  return $ lines contents
 
 ------------------------------------------------------------------------------
 -- Ex 6: Given a Handle and a list of line indexes, produce the lines
@@ -123,7 +149,9 @@ hFetchLines = todo
 -- handle.
 
 hSelectLines :: Handle -> [Int] -> IO [String]
-hSelectLines h nums = todo
+hSelectLines h nums = do
+  allLines <- hFetchLines h
+  return $ map (\n -> allLines !! (n - 1)) nums
 
 ------------------------------------------------------------------------------
 -- Ex 7: In this exercise we see how a program can be split into a
@@ -163,5 +191,11 @@ counter ("inc",n)   = (True,"done",n+1)
 counter ("print",n) = (True,show n,n)
 counter ("quit",n)  = (False,"bye bye",n)
 
-interact' :: ((String,st) -> (Bool,String,st)) -> st -> IO st
-interact' f state = todo
+interact' :: ((String, st) -> (Bool, String, st)) -> st -> IO st
+interact' f initialState = do
+  input <- getLine
+  let (continue, output, newState) = f (input, initialState)
+  putStrLn output
+  if continue 
+    then interact' f newState 
+    else return newState
