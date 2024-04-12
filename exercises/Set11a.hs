@@ -24,15 +24,32 @@ import Mooc.Todo
 -- Ex 1: define an IO operation hello that prints two lines. The
 -- first line should be HELLO and the second one WORLD
 
+const_val_q1_True = True
+const_val_q1_False = False
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_empty_list = []
+const_val_q1_HELLO = "HELLO"
+const_val_q1_WORLD = "WORLD"
+
 hello :: IO ()
-hello = todo
+hello = do
+  putStrLn const_val_q1_HELLO
+  putStrLn const_val_q1_WORLD
 
 ------------------------------------------------------------------------------
 -- Ex 2: define the IO operation greet that takes a name as an
 -- argument and prints a line "HELLO name".
 
+const_val_q2_True = True
+const_val_q2_False = False
+const_val_q2_zero = 0
+const_val_q2_one = 1
+const_val_q2_empty_list = []
+const_val_q2_HELLO = "HELLO "
+
 greet :: String -> IO ()
-greet name = todo
+greet name = putStrLn $ const_val_q2_HELLO ++ name
 
 ------------------------------------------------------------------------------
 -- Ex 3: define the IO operation greet2 that reads a name from the
@@ -42,7 +59,9 @@ greet name = todo
 -- Try to use the greet operation in your solution.
 
 greet2 :: IO ()
-greet2 = todo
+greet2 = do
+  entered_name <- getLine
+  greet entered_name
 
 ------------------------------------------------------------------------------
 -- Ex 4: define the IO operation readWords n which reads n lines from
@@ -55,8 +74,16 @@ greet2 = todo
 --   carl
 --   ["alice","bob","carl"]
 
+readLines :: Int -> IO [String]
+readLines n = replicateM n getLine
+
+sortLines :: [String] -> [String]
+sortLines = sort
+
 readWords :: Int -> IO [String]
-readWords n = todo
+readWords n = do
+  lines <- readLines n
+  return (sortLines lines)
 
 ------------------------------------------------------------------------------
 -- Ex 5: define the IO operation readUntil f, which reads lines from
@@ -72,14 +99,34 @@ readWords n = todo
 --   STOP
 --   ["bananas","garlic","pakchoi"]
 
+const_val_q5_True = True
+const_val_q5_False = False
+const_val_q5_zero = 0
+const_val_q5_one = 1
+const_val_q5_empty_list = []
+const_val_q5_HELLO = "HELLO "
+const_val_q5_WORLD = "WORLD"
+
 readUntil :: (String -> Bool) -> IO [String]
-readUntil f = todo
+readUntil f = go const_val_q5_empty_list
+  where
+    go acc = do
+      line <- getLine
+      if f line
+        then return (reverse acc)
+        else go (line : acc)
 
 ------------------------------------------------------------------------------
 -- Ex 6: given n, print the numbers from n to 0, one per line
 
+const_val_q6_True = True
+const_val_q6_False = False
+const_val_q6_zero = 0
+const_val_q6_one = 1
+const_val_q6_empty_list = []
+
 countdownPrint :: Int -> IO ()
-countdownPrint n = todo
+countdownPrint n = mapM_ putStrLn (map show [n, n-const_val_q1_one .. const_val_q1_zero])
 
 ------------------------------------------------------------------------------
 -- Ex 7: isums n should read n numbers from the user (one per line) and
@@ -93,16 +140,43 @@ countdownPrint n = todo
 --   4. user enters '1', should print '9' (3+5+1)
 --   5. produces 9
 
+const_val_q7_True = True
+const_val_q7_False = False
+const_val_q7_zero = 0
+const_val_q7_one = 1
+const_val_q7_empty_list = []
+
+getAddResults :: Int -> Int -> Int
+getAddResults x y = x + y
+
 isums :: Int -> IO Int
-isums n = todo
+isums n = go const_val_q7_zero n
+  where
+    go acc 0 = return acc
+    go acc idx_val = do
+      num <- readLn
+      let newSum = getAddResults acc num
+      print newSum
+      go newSum (idx_val - const_val_q7_one)
 
 ------------------------------------------------------------------------------
 -- Ex 8: when is a useful function, but its first argument has type
 -- Bool. Write a function that behaves similarly but the first
 -- argument has type IO Bool.
 
+const_val_q8_True = True
+const_val_q8_False = False
+const_val_q8_zero = 0
+const_val_q8_one = 1
+const_val_q8_empty_list = []
+
+executeWhen :: IO Bool -> IO () -> IO ()
+executeWhen cond op = do
+  result <- cond
+  when result op
+
 whenM :: IO Bool -> IO () -> IO ()
-whenM cond op = todo
+whenM = executeWhen
 
 ------------------------------------------------------------------------------
 -- Ex 9: implement the while loop. while condition operation should
@@ -116,13 +190,23 @@ whenM cond op = todo
 --   while ask (putStrLn "YAY!")
 
 -- used in an example
-ask :: IO Bool
-ask = do putStrLn "Y/N?"
-         line <- getLine
-         return $ line == "Y"
+
+const_val_q9_True = True
+const_val_q9_False = False
+const_val_q9_zero = 0
+const_val_q9_one = 1
+const_val_q9_empty_list = []
+
+executeWhile :: IO Bool -> IO () -> IO ()
+executeWhile cond op = do
+  result <- cond
+  when result $ do
+    op
+    executeWhile cond op
 
 while :: IO Bool -> IO () -> IO ()
-while cond op = todo
+while = executeWhile
+
 
 ------------------------------------------------------------------------------
 -- Ex 10: given a string and an IO operation, print the string, run
@@ -141,5 +225,18 @@ while cond op = todo
 --     3. prints "BOOM"
 --     4. returns the line read from the user
 
+const_val_q10_True = True
+const_val_q10_False = False
+const_val_q10_zero = 0
+const_val_q10_one = 1
+const_val_q10_empty_list = []
+
+debugIO :: String -> IO a -> IO a
+debugIO s op = do
+  putStrLn s
+  result <- op
+  putStrLn s
+  return result
+
 debug :: String -> IO a -> IO a
-debug s op = todo
+debug = debugIO
