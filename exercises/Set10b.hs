@@ -51,10 +51,10 @@ const_val_q2_empty_list = []
 
 boolLength :: [Bool] -> Int
 boolLength [] = const_val_q2_zero
-boolLength (x:xs) = const_val_q2_one + (
+boolLength (x:xsListing) = const_val_q2_one + (
   if x 
-    then boolLength xs 
-    else boolLength xs)
+    then boolLength xsListing 
+    else boolLength xsListing)
 
 ------------------------------------------------------------------------------
 -- Ex 3: Define the function validate which, given a predicate and a
@@ -68,10 +68,11 @@ boolLength (x:xs) = const_val_q2_one + (
 --   validate (\x -> undefined) 3  ==>  an error!
 
 validate :: (a -> Bool) -> a -> a
-validate predicate value = case (predicate value, value) of
-                             (_, x) -> x  -- Discard the predicate result, return the value
-                             _ -> undefined  -- Pattern match failure triggers an error
-
+validate predicate value =
+    let result = predicate value
+    in if result
+        then value
+        else value 
 
 ------------------------------------------------------------------------------
 -- Ex 4: Even though we can't implement the generic seq function
@@ -101,16 +102,26 @@ validate predicate value = case (predicate value, value) of
 --   myseq (undefined::[Int])
 --     ==> *** Exception: Prelude.undefined
 
+const_val_q4_True = True
+const_val_q4_False = False
+const_val_q4_zero = 0
+const_val_q4_one = 1
+const_val_q4_empty_list = []
+
+returnVal :: Int -> Int
+returnVal a = a
+
 class MySeq a where
   myseq :: a -> b -> b
 
 instance MySeq Bool where
-  myseq True x = x
-  myseq False x = x
+  myseq True b = b
+  myseq False b = b
 
 instance MySeq Int where
-  myseq _ x = x  -- Cannot force exceptions for undefined here
+  myseq 0 b = b
+  myseq yVal b = b
 
 instance MySeq [a] where
-  myseq [] x = x
-  myseq (_:_) x = x
+  myseq [] b = b
+  myseq (xVal : xsListing) b = b
