@@ -2,7 +2,6 @@ module Set16b where
 
 import Mooc.Todo
 import Examples.Phantom
-
 import Data.Char (toUpper)
 
 ------------------------------------------------------------------------------
@@ -10,7 +9,17 @@ import Data.Char (toUpper)
 -- 3. The type Money is imported from Example.Phantom but you'll need
 -- to introduce GBP yourself.
 
-pounds = todo
+const_val_q1_True = True
+const_val_q1_False = False
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_two = 2
+const_val_q1_three = 3
+const_val_q1_empty_list = []
+
+data GBP
+pounds :: Money GBP
+pounds = Money const_val_q1_three
 
 ------------------------------------------------------------------------------
 -- Ex 2: Implement composition for Rates. Give composeRates a
@@ -27,7 +36,11 @@ pounds = todo
 usdToChf :: Rate USD CHF
 usdToChf = Rate 1.11
 
-composeRates rate1 rate2 = todo
+getMultiplication :: Int -> Int -> Int
+getMultiplication a b = a * b
+
+composeRates :: Rate from to1 -> Rate to1 to2 -> Rate from to2
+composeRates (Rate r1) (Rate r2) = Rate (r1 * r2)
 
 ------------------------------------------------------------------------------
 -- Ex 3: Tracking first, last and full names with phantom types. The
@@ -47,18 +60,20 @@ composeRates rate1 rate2 = todo
 --  toFirst "bob" :: Name First
 --  toLast "smith" :: Name Last
 
+data First
+data Last
+data Full
 
--- Get the String contained in a name
---fromName :: Name a -> String
-fromName = todo
+data Name a = Name String
 
--- Build a Name First
---toFirst :: String -> Name First
-toFirst = todo
+fromName :: Name a -> String
+fromName (Name s) = s
 
--- Build a Name Last
---toLast :: String -> Name Last
-toLast = todo
+toFirst :: String -> Name First
+toFirst = Name
+
+toLast :: String -> Name Last
+toLast = Name
 
 ------------------------------------------------------------------------------
 -- Ex 4: Implement the functions capitalize and toFull.
@@ -78,9 +93,18 @@ toLast = todo
 --  capitalize (toLast "smith") :: Name Last
 --  fromName (capitalize (toLast "smith")) ==> "Smith"
 
-capitalize = todo
+const_val_q4_True = True
+const_val_q4_False = False
+const_val_q4_zero = 0
+const_val_q4_one = 1
+const_val_q4_empty_list = []
+const_val_q4_space = " "
 
-toFull = todo
+capitalize :: Name a -> Name a
+capitalize (Name (x:xs)) = Name (toUpper x : xs)
+
+toFull :: Name First -> Name Last -> Name Full
+toFull (Name first) (Name last) = Name (first ++ const_val_q4_space ++ last)
 
 ------------------------------------------------------------------------------
 -- Ex 5: Type classes can let you write code that handles different
@@ -91,6 +115,25 @@ toFull = todo
 --  render (Money 1.0 :: Money USD) ==> "$1.0"
 --  render (Money 1.0 :: Money CHF) ==> "1.0chf"
 
+const_val_q5_True = True
+const_val_q5_False = False
+const_val_q5_zero = 0
+const_val_q5_one = 1
+const_val_q5_two = 2
+const_val_q5_three = 3
+const_val_q5_empty_list = []
+const_val_q5_str1 = "e"
+const_val_q5_str2 = "$"
+const_val_q5_str3 = "chf"
+
 class Render currency where
   render :: Money currency -> String
 
+instance Render EUR where
+  render (Money amount) = show amount ++ const_val_q5_str1
+
+instance Render USD where
+  render (Money amount) = const_val_q5_str2 ++ show amount
+
+instance Render CHF where
+  render (Money amount) = show amount ++ const_val_q5_str3
