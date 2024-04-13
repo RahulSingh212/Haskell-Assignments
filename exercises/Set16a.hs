@@ -18,8 +18,17 @@ import Data.List
 --  *Set16a> quickCheck (isSorted [])
 --  +++ OK, passed 1 test.
 
+const_val_q1_True = True
+const_val_q1_False = False
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_empty_list = []
+
+-- Property to check if a list is sorted
 isSorted :: (Show a, Ord a) => [a] -> Property
-isSorted = todo
+isSorted xsListing = property $ sorted xsListing
+  where
+    sorted ysListing = sort ysListing == ysListing
 
 ------------------------------------------------------------------------------
 -- Ex 2: In this and the following exercises, we'll build a suite of
@@ -50,14 +59,27 @@ isSorted = todo
 --  *Set16a> quickCheck (sumIsLength [4,5,6,4,5,4] (freq1 [4,5,6,4,5,4]))
 --  +++ OK, passed 1 test.
 
-sumIsLength :: Show a => [a] -> [(a,Int)] -> Property
-sumIsLength input output = todo
+const_val_q2_True = True
+const_val_q2_False = False
+const_val_q2_zero = 0
+const_val_q2_one = 1
+const_val_q2_empty_list = []
 
--- This is a function that passes the sumIsLength test but is wrong
+sumIsLength :: Show a => [a] -> [(a, Int)] -> Property
+sumIsLength xs ys = property $ frequenciesSum ys == length xs
+  where
+    frequenciesSum zs = sum (map snd zs)
+
+getAddition :: Int -> Int -> Int
+getAddition a b = a + b
+
 freq1 :: Eq a => [a] -> [(a,Int)]
-freq1 [] = []
-freq1 [x] = [(x,1)]
-freq1 (x:y:xs) = [(x,1),(y,length xs + 1)]
+freq1 [] = const_val_q2_empty_list
+freq1 [x_val] = [(x_val,const_val_q2_one)]
+freq1 (x_val:y_val:xsListing) = 
+  [(x_val,const_val_q2_one),
+    (y_val,
+    getAddition (length xsListing) const_val_q2_one)]
 
 ------------------------------------------------------------------------------
 -- Ex 3: Implement a Property that takes an arbitrary element from the
@@ -79,12 +101,24 @@ freq1 (x:y:xs) = [(x,1),(y,length xs + 1)]
 --  *Set16a> quickCheck (inputInOutput [4,5,6,4,5,4] (freq2 [4,5,6,4,5,4]))
 --  +++ OK, passed 100 tests.
 
-inputInOutput :: (Show a, Eq a) => [a] -> [(a,Int)] -> Property
-inputInOutput input output = todo
+const_val_q3_True = True
+const_val_q3_False = False
+const_val_q3_zero = 0
+const_val_q3_one = 1
+const_val_q3_empty_list = []
 
--- This function passes both the sumIsLength and inputInOutput tests
+inputInOutput :: (Show a, Eq a) => [a] -> [(a,Int)] -> Property
+inputInOutput input output = forAll (elements input) (propIsIn output)
+
+propIsIn :: (Eq a) => [(a,Int)] -> a -> Property
+propIsIn xsListing r = property $ check $ lookup r xsListing
+  where 
+    check x = case x of 
+      Nothing  -> const_val_q3_False
+      (Just extra) -> const_val_q3_True
+
 freq2 :: Eq a => [a] -> [(a,Int)]
-freq2 xs = map (\x -> (x,1)) xs
+freq2 xsListing = map (\x -> (x,const_val_q3_one)) xsListing
 
 ------------------------------------------------------------------------------
 -- Ex 4: Implement a Property that takes a pair (x,n) from the
@@ -110,13 +144,25 @@ freq2 xs = map (\x -> (x,1)) xs
 --  *Set16a> quickCheck (outputInInput [4,5,6,4,5,4] (freq3 [4,5,6,4,5,4]))
 --  +++ OK, passed 100 tests.
 
-outputInInput :: (Show a, Eq a) => [a] -> [(a,Int)] -> Property
-outputInInput input output = todo
+const_val_q4_True = True
+const_val_q4_False = False
+const_val_q4_zero = 0
+const_val_q4_one = 1
+const_val_q4_empty_list = []
 
--- This function passes the outputInInput test but not the others
+outputInInput :: (Show a, Eq a) => [a] -> [(a,Int)] -> Property
+outputInInput xsListing ysListing = 
+  forAll (elements ysListing) $ \(x_val, n) 
+    -> property $ n == countInInput x_val xsListing
+
 freq3 :: Eq a => [a] -> [(a,Int)]
-freq3 [] = []
-freq3 (x:xs) = [(x,1 + length (filter (==x) xs))]
+freq3 [] = const_val_q4_empty_list
+freq3 (x_val:xsListing) = [(
+  x_val, 
+  getAddition const_val_q4_one (countInInput x_val xsListing))]
+
+countInInput :: Eq a => a -> [a] -> Int
+countInInput x_val xsListing = length $ filter (==x_val) xsListing
 
 ------------------------------------------------------------------------------
 -- Ex 5: Implement a Property that takes a candidate function freq, a
@@ -139,13 +185,28 @@ freq3 (x:xs) = [(x,1 + length (filter (==x) xs))]
 --  *Set16a> quickCheck (frequenciesProp frequencies)
 --  +++ OK, passed 100 tests.
 
+const_val_q5_True = True
+const_val_q5_False = False
+const_val_q5_zero = 0
+const_val_q5_one = 1
+const_val_q5_empty_list = []
+
 frequenciesProp :: ([Char] -> [(Char,Int)]) -> NonEmptyList Char -> Property
-frequenciesProp freq input = todo
+frequenciesProp freq (NonEmpty input) =
+  conjoin $ (map (\p -> p input output) [sumIsLength, inputInOutput, outputInInput])
+    where output = freq input
 
 frequencies :: Eq a => [a] -> [(a,Int)]
-frequencies [] = []
-frequencies (x:ys) = (x, length xs) : frequencies others
-  where (xs,others) = partition (==x) (x:ys)
+frequencies [] = const_val_q5_empty_list
+frequencies xsListing = occurrenceCounting xsListing
+
+occurrenceCounting :: Eq a => [a] -> [(a, Int)]
+occurrenceCounting [] = const_val_q5_empty_list
+occurrenceCounting (x_val:xsListing) = 
+  (x_val, length occurrences) : occurrenceCounting remaining
+  where
+    (occurrences, remaining) = 
+      partition (==x_val) (x_val:xsListing)
 
 ------------------------------------------------------------------------------
 -- Ex 6: Write a generator for lists that have these properties:
@@ -170,8 +231,26 @@ frequencies (x:ys) = (x, length xs) : frequencies others
 --  [0,1,8]
 --  [2,4,10]
 
+const_val_q6_True = True
+const_val_q6_False = False
+const_val_q6_zero = 0
+const_val_q6_one = 1
+const_val_q6_three = 3
+const_val_q6_five = 5
+const_val_q6_ten = 10
+const_val_q6_empty_list = []
+
 genList :: Gen [Int]
-genList = todo
+genList = do
+  len <- genLength
+  nums <- genNumbers len
+  return (sort nums)
+
+genLength :: Gen Int
+genLength = choose (const_val_q6_three, const_val_q6_five)
+
+genNumbers :: Int -> Gen [Int]
+genNumbers len = vectorOf len (choose (const_val_q6_zero, const_val_q6_ten))
 
 ------------------------------------------------------------------------------
 -- Ex 7: Here are the datatypes Arg and Expression from Set 15. Write
@@ -202,6 +281,14 @@ genList = todo
 --  Minus (Number 0) (Number 7)
 --  Minus (Number 8) (Number 5)
 
+const_val_q7_True = True
+const_val_q7_False = False
+const_val_q7_zero = 0
+const_val_q7_one = 1
+const_val_q7_ten = 10
+const_val_q7_empty_list = []
+const_val_q7_str_abcxyz = "abcxyz"
+
 data Arg = Number Int | Variable Char
   deriving (Show, Eq)
 
@@ -209,7 +296,21 @@ data Expression = Plus Arg Arg | Minus Arg Arg
   deriving (Show, Eq)
 
 instance Arbitrary Arg where
-  arbitrary = todo
+  arbitrary = genArg
 
 instance Arbitrary Expression where
-  arbitrary = todo
+  arbitrary = genExpression
+
+genNumber :: Gen Int
+genNumber = choose (const_val_q7_zero, const_val_q7_ten)
+
+genVariable :: Gen Char
+genVariable = elements const_val_q7_str_abcxyz
+
+-- Generates a random Arg
+genArg :: Gen Arg
+genArg = oneof [Number <$> genNumber, Variable <$> genVariable]
+
+-- Generates a random Expression
+genExpression :: Gen Expression
+genExpression = oneof [Plus <$> genArg <*> genArg, Minus <$> genArg <*> genArg]
