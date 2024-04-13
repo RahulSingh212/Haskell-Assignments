@@ -16,8 +16,14 @@ import Mooc.Todo
 --   incrementAll [1,2,3]     ==>  [2,3,4]
 --   incrementAll (Just 3.0)  ==>  Just 4.0
 
+const_val_q1_True = True
+const_val_q1_False = False
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_empty_list = []
+
 incrementAll :: (Functor f, Num n) => f n -> f n
-incrementAll x = todo
+incrementAll = fmap (+1)
 
 ------------------------------------------------------------------------------
 -- Ex 2: Sometimes one wants to fmap multiple levels deep. Implement
@@ -38,10 +44,10 @@ incrementAll x = todo
 --       ==> Just [Just True,Nothing]
 
 fmap2 :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
-fmap2 = todo
+fmap2 = fmap . fmap
 
 fmap3 :: (Functor f, Functor g, Functor h) => (a -> b) -> f (g (h a)) -> f (g (h b))
-fmap3 = todo
+fmap3 = fmap . fmap . fmap
 
 ------------------------------------------------------------------------------
 -- Ex 3: below you'll find a type Result that works a bit like Maybe,
@@ -54,7 +60,21 @@ data Result a = MkResult a | NoResult | Failure String
   deriving Show
 
 instance Functor Result where
-  fmap f result = todo
+  fmap = resultantOfMaybe
+
+resultantOfMaybe :: (a -> b) -> Result a -> Result b
+resultantOfMaybe extra NoResult = NoResult
+resultantOfMaybe extra (Failure msg) = Failure msg
+resultantOfMaybe f (MkResult a) = MkResult (f a)
+
+increment :: Num a => Result a -> Result a
+increment = resultantOfMaybe (+1)
+
+double :: Num a => Result a -> Result a
+double = resultantOfMaybe (*2)
+
+negateResult :: Num a => Result a -> Result a
+negateResult = resultantOfMaybe negate
 
 ------------------------------------------------------------------------------
 -- Ex 4: Here's a reimplementation of the Haskell list type. You might
@@ -68,6 +88,20 @@ data List a = Empty | LNode a (List a)
   deriving Show
 
 instance Functor List where
+  fmap = listTypeMapping
+
+listTypeMapping :: (a -> b) -> List a -> List b
+listTypeMapping _ Empty = Empty
+listTypeMapping f (LNode x xs) = LNode (f x) (listTypeMapping f xs)
+
+incrementList :: Num a => List a -> List a
+incrementList = listTypeMapping (+1)
+
+doubleList :: Num a => List a -> List a
+doubleList = listTypeMapping (*2)
+
+toStringList :: Show a => List a -> List String
+toStringList = listTypeMapping show
 
 ------------------------------------------------------------------------------
 -- Ex 5: Here's another list type. This type every node contains two
@@ -82,6 +116,20 @@ data TwoList a = TwoEmpty | TwoNode a a (TwoList a)
   deriving Show
 
 instance Functor TwoList where
+  fmap = mappingListOfTwo
+
+mappingListOfTwo :: (a -> b) -> TwoList a -> TwoList b
+mappingListOfTwo extra TwoEmpty = TwoEmpty
+mappingListOfTwo f (TwoNode x y xs) = TwoNode (f x) (f y) (mappingListOfTwo f xs)
+
+incrementTwoList :: Num a => TwoList a -> TwoList a
+incrementTwoList = mappingListOfTwo (+1)
+
+doubleTwoList :: Num a => TwoList a -> TwoList a
+doubleTwoList = mappingListOfTwo (*2)
+
+toStringTwoList :: Show a => TwoList a -> TwoList String
+toStringTwoList = mappingListOfTwo show
 
 ------------------------------------------------------------------------------
 -- Ex 6: Count all occurrences of a given element inside a Foldable.
@@ -93,8 +141,20 @@ instance Functor TwoList where
 --   count True [True,False,True] ==> 2
 --   count 'c' (Just 'c') ==> 1
 
+const_val_q6_True = True
+const_val_q6_False = False
+const_val_q6_zero = 0
+const_val_q6_one = 1
+const_val_q6_empty_list = []
+
 count :: (Eq a, Foldable f) => a -> f a -> Int
-count = todo
+count x = occurrencesCount x . toList
+
+occurrencesCount :: Eq a => a -> [a] -> Int
+occurrencesCount _ [] = 0
+occurrencesCount y_val (x_val:xs)
+  | x_val == y_val = const_val_q6_one + occurrencesCount y_val xs
+  | otherwise = occurrencesCount y_val xs
 
 ------------------------------------------------------------------------------
 -- Ex 7: Return all elements that are in two Foldables, as a list.
@@ -105,7 +165,10 @@ count = todo
 --   inBoth Nothing [3]    ==> []
 
 inBoth :: (Foldable f, Foldable g, Eq a) => f a -> g a -> [a]
-inBoth = todo
+inBoth xsListing ysListing = filter (doesContained ysListing) (toList xsListing)
+
+doesContained :: (Foldable f, Eq a) => f a -> a -> Bool
+doesContained ysListing x_val = any (== x_val) (toList ysListing)
 
 ------------------------------------------------------------------------------
 -- Ex 8: Implement the instance Foldable List.
@@ -118,7 +181,11 @@ inBoth = todo
 --   length (LNode 1 (LNode 2 (LNode 3 Empty))) ==> 3
 
 instance Foldable List where
-  foldr = todo
+  foldr = listFoldering
+
+listFoldering :: (a -> b -> b) -> b -> List a -> b
+listFoldering _ z Empty = z
+listFoldering f z (LNode a xs) = f a (listFoldering f z xs)
 
 ------------------------------------------------------------------------------
 -- Ex 9: Implement the instance Foldable TwoList.
@@ -128,7 +195,11 @@ instance Foldable List where
 --   length (TwoNode 0 1 (TwoNode 2 3 TwoEmpty)) ==> 4
 
 instance Foldable TwoList where
-  foldr = todo
+  foldr = twoListFold
+
+twoListFold :: (a -> b -> b) -> b -> TwoList a -> b
+twoListFold _ z TwoEmpty = z
+twoListFold f z (TwoNode a b xs) = f a (f b (twoListFold f z xs))
 
 ------------------------------------------------------------------------------
 -- Ex 10: (Tricky!) Fun a is a type that wraps a function Int -> a.
@@ -143,6 +214,7 @@ runFun :: Fun a -> Int -> a
 runFun (Fun f) x = f x
 
 instance Functor Fun where
+  fmap f (Fun g) = Fun (f . g)
 
 ------------------------------------------------------------------------------
 -- Ex 11: (Tricky!) You'll find the binary tree type from Set 5b
