@@ -16,8 +16,14 @@ import Text.Read (readMaybe)
 --  sumTwoMaybes (Just 1) Nothing   ==> Nothing
 --  sumTwoMaybes Nothing Nothing    ==> Nothing
 
+const_val_q1_True = True
+const_val_q1_False = False
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_empty_list = []
+
 sumTwoMaybes :: Maybe Int -> Maybe Int -> Maybe Int
-sumTwoMaybes = todo
+sumTwoMaybes = liftA2 (+)
 
 ------------------------------------------------------------------------------
 -- Ex 2: Given two lists of words, xs and ys, generate all statements
@@ -35,8 +41,17 @@ sumTwoMaybes = todo
 --         "code is suffering","code is life",
 --         "code is not suffering","code is not life"]
 
+const_val_q2_True = True
+const_val_q2_False = False
+const_val_q2_zero = 0
+const_val_q2_one = 1
+const_val_q2_empty_list = []
+const_val_q2_str_1 = " is "
+const_val_q2_str_2 = " is not "
+
 statements :: [String] -> [String] -> [String]
-statements = todo
+statements xs ys = (++) <$> (conjunctions <*> xs) <*> ys
+  where conjunctions = [(++ const_val_q2_str_1), (++ const_val_q2_str_2)]
 
 ------------------------------------------------------------------------------
 -- Ex 3: A simple calculator with error handling. Given an operation
@@ -53,8 +68,24 @@ statements = todo
 --  calculator "doubl" "7"    ==> Nothing
 --  calculator "double" "7x"  ==> Nothing
 
+const_val_q3_True = True
+const_val_q3_False = False
+const_val_q3_zero = 0
+const_val_q3_one = 1
+const_val_q3_two = 2
+const_val_q3_empty_list = []
+const_val_q3_str_1 = "negate"
+const_val_q3_str_2 = "double"
+
+performOperation :: String -> Int -> Int
+performOperation "negate" = negate
+performOperation "double" = (* const_val_q3_two)
+performOperation extra = const const_val_q3_zero
+
 calculator :: String -> String -> Maybe Int
-calculator = todo
+calculator "negate" num = fmap (performOperation const_val_q3_str_1) (readMaybe num)
+calculator "double" num = fmap (performOperation const_val_q3_str_2) (readMaybe num)
+calculator extra1 extra2 = Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 4: Safe division. Implement the function validateDiv that
@@ -70,8 +101,20 @@ calculator = todo
 --  validateDiv 6 0 ==> Errors ["Division by zero!"]
 --  validateDiv 0 3 ==> Ok 0
 
+const_val_q4_True = True
+const_val_q4_False = False
+const_val_q4_zero = 0
+const_val_q4_one = 1
+const_val_q4_two = 2
+const_val_q4_empty_list = []
+const_val_q4_str_1 = "Division by zero!"
+
+handleDivision :: Int -> Int -> Validation Int
+handleDivision _ 0 = invalid const_val_q4_str_1
+handleDivision x y = pure $ x `div` y
+
 validateDiv :: Int -> Int -> Validation Int
-validateDiv = todo
+validateDiv = handleDivision
 
 ------------------------------------------------------------------------------
 -- Ex 5: Validating street addresses. A street address consists of a
@@ -97,11 +140,46 @@ validateDiv = todo
 --  validateAddress "Haskeller's favourite road" "35a" "1333"
 --    ==> Errors ["Invalid street name","Invalid street number","Invalid postcode"]
 
+const_val_q5_True = True
+const_val_q5_False = False
+const_val_q5_zero = 0
+const_val_q5_one = 1
+const_val_q5_two = 2
+const_val_q5_five = 5
+const_val_q5_twenty = 20
+const_val_q5_empty_list = []
+const_val_q5_str_1 = "Invalid street name"
+const_val_q5_str_2 = "Invalid street number"
+const_val_q5_str_3 = "Invalid postcode"
+
 data Address = Address String String String
   deriving (Show,Eq)
 
+validateStreetName :: String -> Validation String
+validateStreetName streetName =
+  if length streetName > const_val_q5_twenty
+    then invalid const_val_q5_str_1
+  else pure streetName 
+
+validateStreetNumber :: String -> Validation String
+validateStreetNumber streetNumber =
+  if all isDigit streetNumber 
+    then pure streetNumber 
+  else invalid const_val_q5_str_2
+
+validatePostCode :: String -> Validation String
+validatePostCode postCode =
+  if length postCode == const_val_q5_five && all isDigit postCode 
+    then pure postCode 
+  else invalid const_val_q5_str_3
+
 validateAddress :: String -> String -> String -> Validation Address
-validateAddress streetName streetNumber postCode = todo
+validateAddress streetName streetNumber postCode =
+  Address <$> 
+  validateStreetName streetName <*> 
+  validateStreetNumber streetNumber <*> 
+  validatePostCode postCode
+
 
 ------------------------------------------------------------------------------
 -- Ex 6: Given the names, ages and employment statuses of two
@@ -120,10 +198,22 @@ validateAddress streetName streetNumber postCode = todo
 data Person = Person String Int Bool
   deriving (Show, Eq)
 
+combinePersons :: Person -> Person -> [Person]
+combinePersons x y = [x, y]
+
 twoPersons :: Applicative f =>
   f String -> f Int -> f Bool -> f String -> f Int -> f Bool
   -> f [Person]
-twoPersons name1 age1 employed1 name2 age2 employed2 = todo
+twoPersons name1 age1 employed1 name2 age2 employed2 =
+  combinePersons <$> person1 <*> person2
+    where person1 = Person <$> 
+                    name1 <*> 
+                    age1 <*> 
+                    employed1
+          person2 = Person <$> 
+                    name2 <*> 
+                    age2 <*> 
+                    employed2
 
 ------------------------------------------------------------------------------
 -- Ex 7: Validate a String that's either a Bool or an Int. The return
@@ -142,8 +232,35 @@ twoPersons name1 age1 employed1 name2 age2 employed2 = todo
 --  boolOrInt "13.2"    ==> Errors ["Not a Bool","Not an Int"]
 --  boolOrInt "Falseb"  ==> Errors ["Not a Bool","Not an Int"]
 
+const_val_q7_True = True
+const_val_q7_False = False
+const_val_q7_zero = 0
+const_val_q7_one = 1
+const_val_q7_two = 2
+const_val_q7_five = 5
+const_val_q7_twenty = 20
+const_val_q7_empty_list = []
+const_val_q7_str_1 = "Not a Bool"
+const_val_q7_str_2 = "Not an Int"
+const_val_q7_str_3 = "True"
+const_val_q7_str_4 = "False"
+
+validateBool :: String -> Validation Bool
+validateBool str =
+  case str of
+    "True"  -> pure True
+    "False" -> pure False
+    _       -> invalid const_val_q7_str_1
+
+validateInt :: String -> Validation Int
+validateInt str =
+  case readMaybe str of
+    Just n  -> pure n
+    Nothing -> invalid const_val_q7_str_2
+
 boolOrInt :: String -> Validation (Either Bool Int)
-boolOrInt = todo
+boolOrInt str = (Left <$> validateBool str) <|> 
+                (Right <$> validateInt str)
 
 ------------------------------------------------------------------------------
 -- Ex 8: Improved phone number validation. Implement the function
@@ -166,8 +283,23 @@ boolOrInt = todo
 --  normalizePhone "123 456 78 999"
 --    ==> Errors ["Too long"]
 
+const_val_q8_True = True
+const_val_q8_False = False
+const_val_q8_zero = 0
+const_val_q8_one = 1
+const_val_q8_ten = 10
+const_val_q8_empty_list = []
+const_val_q8_str_1 = "Too long"
+const_val_q8_str_2 = "Invalid character: "
+
 normalizePhone :: String -> Validation String
-normalizePhone = todo
+normalizePhone s = (checkLen t) *> (allDigits t)
+  where t = filter (/=' ') s
+        checkLen x = check 
+                    (length x <= const_val_q8_ten) 
+                    const_val_q8_str_1 x
+        allDigits x = traverse checkDigit x
+          where checkDigit a = check (isDigit a) (const_val_q8_str_2 ++ [a]) a
 
 ------------------------------------------------------------------------------
 -- Ex 9: Parsing expressions. The Expression type describes an
@@ -236,11 +368,14 @@ data Priced a = Priced Int a
   deriving (Show, Eq)
 
 instance Functor Priced where
-  fmap = todo
+  fmap f (Priced price a) = Priced price (f a)
+
+getAddResults :: Int -> Int -> Int
+getAddResults x_val y_val = x_val + y_val
 
 instance Applicative Priced where
-  pure = todo
-  liftA2 = todo
+  pure = Priced 0
+  liftA2 f (Priced p1 a1) (Priced p2 a2) = Priced (getAddResults p1 p2) (f a1 a2)
 
 ------------------------------------------------------------------------------
 -- Ex 11: This and the next exercise will use a copy of the
@@ -264,7 +399,6 @@ class MyApplicative f where
   myPure :: a -> f a
   myLiftA2 :: (a -> b -> c) -> f a -> f b -> f c
 
--- Some instances for testing:
 instance MyApplicative Maybe where
   myPure = pure
   myLiftA2 = liftA2
@@ -273,7 +407,7 @@ instance MyApplicative [] where
   myLiftA2 = liftA2
 
 (<#>) :: MyApplicative f => f (a -> b) -> f a -> f b
-f <#> x = todo
+f <#> x = myLiftA2 ($) f x
 
 ------------------------------------------------------------------------------
 -- Ex 12: Reimplement fmap using liftA2 and pure. In practical terms,
@@ -290,7 +424,7 @@ f <#> x = todo
 --  myFmap negate [1,2,3]  ==> [-1,-2,-3]
 
 myFmap :: MyApplicative f => (a -> b) -> f a -> f b
-myFmap = todo
+myFmap f x = myPure f <#> x
 
 ------------------------------------------------------------------------------
 -- Ex 13: Given a function that returns an Alternative value, and a
@@ -317,7 +451,7 @@ myFmap = todo
 --       ==> Errors ["zero","zero","zero"]
 
 tryAll :: Alternative f => (a -> f b) -> [a] -> f b
-tryAll = todo
+tryAll f xs = foldr (\x acc -> f x <|> acc) empty xs
 
 ------------------------------------------------------------------------------
 -- Ex 14: Here's the type `Both` that expresses the composition of
@@ -342,7 +476,7 @@ newtype Both f g a = Both (f (g a))
   deriving Show
 
 instance (Functor f, Functor g) => Functor (Both f g) where
-  fmap = todo
+  fmap h (Both x) = Both (fmap (fmap h) x)
 
 ------------------------------------------------------------------------------
 -- Ex 15: The composition of two Applicatives is also an Applicative!
@@ -369,6 +503,8 @@ instance (Functor f, Functor g) => Functor (Both f g) where
 --              Errors ["fail 1"],Errors ["fail 1"],
 --              Errors ["fail 1","fail 2"]]
 
+-- Define instance Applicative for Both f g
 instance (Applicative f, Applicative g) => Applicative (Both f g) where
-  pure = todo
-  liftA2 = todo
+  pure x = Both (pure (pure x))
+  liftA2 h (Both x) (Both y) = Both (liftA2 (liftA2 h) x y)
+
