@@ -10,7 +10,6 @@ import Data.Char
 import Data.IORef
 import Data.List
 
-
 ------------------------------------------------------------------------------
 -- Ex 1: implement the function ifM, that takes three monadic
 -- operations. If the first of the operations returns True, the second
@@ -35,6 +34,13 @@ import Data.List
 --       ==> ('b',11)
 --     runState (put 9 >> ifM test (return 'a') (return 'b')) 0
 --       ==> ('a',9)
+
+const_val_q1_True = True
+const_val_q1_False = False
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_empty_list = []
+const_val_q1_str1 = ""
 
 test :: State Int Bool
 test = do

@@ -9,9 +9,8 @@ import Control.Monad.Trans.State
 import Data.Char
 import Data.List
 import qualified Data.Map as Map
-
+import Data.Maybe (mapMaybe)
 import Examples.Bank
-
 
 ------------------------------------------------------------------------------
 -- Ex 1: Your task is to help implement the function readName that
@@ -53,7 +52,7 @@ const_val_q1_zero = 0
 const_val_q1_one = 1
 const_val_q1_empty_list = []
 
-split :: String -> Maybe (String,String)
+split :: String -> Maybe (String, String)
 split s = case words s of
   [x, y] -> Just (x, y)
   _      -> Nothing
@@ -61,12 +60,12 @@ split s = case words s of
 checkNumber :: (String, String) -> Maybe (String, String)
 checkNumber (for, sur)
   | any isDigit for || any isDigit sur = Nothing
-  | otherwise                           = Just (for, sur)
+  | otherwise = Just (for, sur)
 
 checkCapitals :: (String, String) -> Maybe (String, String)
 checkCapitals (for, sur)
   | all isUpper [head for, head sur] = Just (for, sur)
-  | otherwise                         = Nothing
+  | otherwise = Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 2: Given a list of players and their scores (as [(String,Int)]),
@@ -96,7 +95,9 @@ winner :: [(String, Int)] -> String -> String -> Maybe String
 winner scores player1 player2 = do
   score1 <- lookup player1 scores
   score2 <- lookup player2 scores
-  if score1 >= score2 then Just player1 else Just player2
+  return $ if score1 < score2 
+    then player2 
+  else player1
 
 ------------------------------------------------------------------------------
 -- Ex 3: given a list of indices and a list of values, return the sum
@@ -113,13 +114,39 @@ winner scores player1 player2 = do
 --  selectSum [0..10] [4,6,9,20]
 --    Nothing
 
+const_val_q3_True = True
+const_val_q3_False = False
+const_val_q3_zero = 0
+const_val_q3_one = 1
+const_val_q3_empty_list = []
+
+getArrayLength :: [a] -> Int
+getArrayLength xsListing = length xsListing
+
+getGreaterThan :: Int -> Int -> Bool
+getGreaterThan a b = a > b
+
+getGreaterThanEqual :: Int -> Int -> Bool
+getGreaterThanEqual a b = a >= b
+
+getLessThan :: Int -> Int -> Bool
+getLessThan a b = a < b
+
+getLessThanEqual :: Int -> Int -> Bool
+getLessThanEqual a b = a <= b
+
+-- 
+
 safeIndex :: [a] -> Int -> Maybe a
-safeIndex xs i
-  | i < 0 || i >= length xs = Nothing
-  | otherwise                = Just (xs !! i)
+safeIndex xs idx
+  | getGreaterThan idx 0 || getLessThan idx (getArrayLength xs) = Just (xs !! idx)
+  | otherwise = Nothing
 
 selectSum :: Num a => [a] -> [Int] -> Maybe a
-selectSum xs is = fmap sum $ traverse (safeIndex xs) is
+selectSum xs is = if all 
+  (\idx -> getGreaterThanEqual idx 0 && getLessThan idx (getArrayLength xs)) is
+    then Just $ sum $ mapMaybe (\idx -> safeIndex xs idx) is
+  else Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 4: Here is the Logger monad from the course material. Implement
@@ -131,6 +158,12 @@ selectSum xs is = fmap sum $ traverse (safeIndex xs) is
 -- Examples:
 --   countAndLog even [0,1,2,3,4,5]
 --     ==> Logger ["0","2","4"] 3
+
+const_val_q4_True = True
+const_val_q4_False = False
+const_val_q4_zero = 0
+const_val_q4_one = 1
+const_val_q4_empty_list = []
 
 data Logger a = Logger [String] a
   deriving (Show, Eq)
@@ -152,8 +185,22 @@ instance Applicative Logger where
   pure = return
   (<*>) = ap
 
+getAddResult :: Int -> Int -> Int
+getAddResult x_val y_val = x_val + y_val
+
 countAndLog :: Show a => (a -> Bool) -> [a] -> Logger Int
-countAndLog = todo
+countAndLog p xs = foldr (countIfAndLog p) (return 0) xs
+
+countIfAndLog :: Show a => (a -> Bool) -> a -> Logger Int -> Logger Int
+countIfAndLog p x acc
+  | p x = logAndIncrement x acc
+  | otherwise = acc
+
+logAndIncrement :: Show a => a -> Logger Int -> Logger Int
+logAndIncrement x acc = do
+  msg (show x)
+  n <- acc
+  return (getAddResult n const_val_q4_one)
 
 ------------------------------------------------------------------------------
 -- Ex 5: You can find the Bank and BankOp code from the course
@@ -166,11 +213,28 @@ countAndLog = todo
 -- operation shouldn't change the state of the Bank. The functions
 -- from Data.Map are available under the prefix Map.
 
+const_val_q5_True = True
+const_val_q5_False = False
+const_val_q5_zero = 0
+const_val_q5_one = 1
+const_val_q5_seven = 7
+const_val_q5_ten = 10
+const_val_q5_empty_list = []
+const_val_q5_str1 = "harry"
+const_val_q5_str2 = "cedric"
+const_val_q5_str3 = "ginny"
+
 exampleBank :: Bank
-exampleBank = (Bank (Map.fromList [("harry",10),("cedric",7),("ginny",1)]))
+exampleBank = (Bank (Map.fromList 
+  [(const_val_q5_str1,const_val_q5_ten),
+    (const_val_q5_str2,const_val_q5_seven),
+    (const_val_q5_str3,const_val_q5_one)]))
 
 balance :: String -> BankOp Int
-balance accountName = todo
+balance accountName = BankOp getBalance
+  where 
+    getBalance (Bank accounts) 
+      = (Map.findWithDefault const_val_q5_zero accountName accounts, Bank accounts)
 
 ------------------------------------------------------------------------------
 -- Ex 6: Using the operations balance, withdrawOp and depositOp, and
@@ -187,8 +251,11 @@ balance accountName = todo
 --   runBankOp (rob "sean" "ginny") exampleBank
 --     ==> ((),Bank (fromList [("cedric",7),("ginny",1),("harry",10)]))
 
+robHelper :: String -> String -> Int -> BankOp ()
+robHelper from to amount = withdrawOp from amount +> \_ -> depositOp to amount
+
 rob :: String -> String -> BankOp ()
-rob from to = todo
+rob from to = balance from +> robHelper from to
 
 ------------------------------------------------------------------------------
 -- Ex 7: using the State monad, write the operation `update` that first
@@ -199,8 +266,18 @@ rob from to = todo
 --  runState update 3
 --    ==> ((),7)
 
+const_val_q7_True = True
+const_val_q7_False = False
+const_val_q7_zero = 0
+const_val_q7_one = 1
+const_val_q7_two = 2
+const_val_q7_empty_list = []
+
+getMultiplication :: Int -> Int -> Int
+getMultiplication a b = a * b 
+
 update :: State Int ()
-update = modify (\x -> x * 2 + 1)
+update = modify (\x -> getAddResult (getMultiplication x const_val_q7_two) const_val_q7_one)
 
 ------------------------------------------------------------------------------
 -- Ex 8: Checking that parentheses are balanced with the State monad.
@@ -227,23 +304,25 @@ update = modify (\x -> x * 2 + 1)
 --   parensMatch "(()((()))"   ==> False
 --   parensMatch "(()))("      ==> False
 
-handleOpenParen :: State Int ()
-handleOpenParen = modify (+1)
+const_val_q8_True = True
+const_val_q8_False = False
+const_val_q8_zero = 0
+const_val_q8_one = 1
+const_val_q8_two = 2
+const_val_q8_empty_list = []
+const_val_q8_str1 = "("
 
--- Define a function to handle ')' and update the state
-handleCloseParen :: State Int ()
-handleCloseParen = modify (\x -> if x > 0 then x - 1 else -1)
-
--- Define the paren function to update the state based on a single character
 paren :: Char -> State Int ()
-paren '(' = handleOpenParen
-paren ')' = handleCloseParen
-paren _   = return ()
+paren ch = do s <- get
+              if (s == -1)
+              then return ()
+              else modify (\s -> s + if ch == '(' 
+                then const_val_q8_one 
+              else -const_val_q8_one)
 
--- Define a helper function to check if parentheses are balanced
 parensMatch :: String -> Bool
-parensMatch s = count == 0
-  where (_, count) = runState (mapM_ paren s) 0
+parensMatch s = getEqualThan count const_val_q8_zero
+  where (_,count) = runState (mapM_ paren s) const_val_q8_zero
 
 ------------------------------------------------------------------------------
 -- Ex 9: using a state of type [(a,Int)] we can keep track of the
@@ -269,11 +348,24 @@ parensMatch s = count == 0
 --
 -- PS. The order of the list of pairs doesn't matter
 
-count :: Eq a => a -> State [(a, Int)] ()
-count x = modify $ \lst ->
+const_val_q9_True = True
+const_val_q9_False = False
+const_val_q9_zero = 0
+const_val_q9_one = 1
+const_val_q9_two = 2
+const_val_q9_empty_list = []
+
+updateCounter :: Eq a => a -> State [(a, Int)] ()
+updateCounter x = modify (\lst -> updateCountHelper x lst)
+
+updateCountHelper :: Eq a => a -> [(a, Int)] -> [(a, Int)]
+updateCountHelper x lst =
   case lookup x lst of
-    Just n  -> [(x, n + 1)] ++ filter (\(y, _) -> y /= x) lst
-    Nothing -> [(x, 1)] ++ lst
+    Just n  -> [(x, getAddResult n const_val_q9_one)] ++ filter (\(y, _) -> y /= x) lst
+    Nothing -> [(x, const_val_q9_one)] ++ lst
+
+count :: Eq a => a -> State [(a, Int)] ()
+count x = updateCounter x
 
 ------------------------------------------------------------------------------
 -- Ex 10: Implement the operation occurrences, which
@@ -294,7 +386,27 @@ count x = modify $ \lst ->
 --  runState (occurrences [4,7]) [(2,1),(3,1)]
 --    ==> (4,[(2,1),(3,1),(4,1),(7,1)])
 
-occurrences :: (Eq a) => [a] -> State [(a, Int)] Int
-occurrences xs = do
-  mapM_ count xs
+const_val_q10_True = True
+const_val_q10_False = False
+const_val_q10_zero = 0
+const_val_q10_one = 1
+const_val_q10_two = 2
+const_val_q10_empty_list = []
+
+updateCount :: Eq a => a -> State [(a, Int)] ()
+updateCount x = modify (\counts -> incrementCount x counts)
+
+getEqualThan :: Int -> Int -> Bool
+getEqualThan a b = a == b
+
+incrementCount :: Eq a => a -> [(a, Int)] -> [(a, Int)]
+incrementCount x_val [] = [(x_val, const_val_q10_one)]
+incrementCount x_val ((y_val, count) : ysListing)
+  | x_val == y_val = (y_val, getAddResult count const_val_q10_one) : ysListing
+  | otherwise = (y_val, count) : incrementCount x_val ysListing
+
+occurrences :: Eq a => [a] -> State [(a, Int)] Int
+occurrences xsListing = do
+  mapM_ updateCount xsListing
   gets length
+
