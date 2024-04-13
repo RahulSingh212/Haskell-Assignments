@@ -27,11 +27,24 @@ import qualified Data.ByteString.Lazy as BL
 --  greetText (T.pack "Martin Freeman") ==> "Hello, Martin Freeman!"
 --  greetText (T.pack "Benedict Cumberbatch") ==> "Hello, Benedict Cumber...!"
 
+const_val_q1_True = True
+const_val_q1_False = False
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_empty_list = []
+const_val_q1_str1 = ""
+const_val_q1_str2 = "Hello, "
+
+createGreeting :: T.Text -> T.Text
+createGreeting name = "Hello, " <> T.take 15 name <> end
+  where
+    end = if T.length name > 15
+            then "...!"
+            else "!"
+
+-- Define the main function using the helper function
 greetText :: T.Text -> T.Text
-greetText name = (T.pack "Hello, ") <> (T.take 15 name) <> end
-    where end = if (T.length name > 15)
-                then T.pack ("...!")
-                else T.pack ("!")
+greetText = createGreeting
 
 ------------------------------------------------------------------------------
 -- Ex 2: Capitalize every second word of a Text.
