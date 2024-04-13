@@ -267,17 +267,28 @@ instance Functor Fun where
 --     / \     \
 --    1   3     6
 
+const_val_q11_True = True
+const_val_q11_False = False
+const_val_q11_zero = 0
+const_val_q11_one = 1
+const_val_q11_empty_list = []
+
 data Tree a = Leaf | Node a (Tree a) (Tree a)
   deriving Show
 
 instance Functor Tree where
-  fmap = todo
+  fmap extra (Leaf)       = Leaf
+  fmap f (Node a x y) = Node (f a) (fmap f x) (fmap f y)
 
 sumTree :: Monoid m => Tree m -> m
-sumTree = todo
+sumTree = foldTree (\x -> x)
 
 instance Foldable Tree where
-  foldMap f t = sumTree (fmap f t)
+  foldMap = foldTree
+
+foldTree :: Monoid m => (a -> m) -> Tree a -> m
+foldTree _ Leaf         = mempty
+foldTree f (Node a x y) = foldTree f x <> f a <> foldTree f y
 
 ------------------------------------------------------------------------------
 -- Bonus! If you enjoyed the two last exercises (not everybody will),
