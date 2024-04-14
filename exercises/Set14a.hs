@@ -31,20 +31,18 @@ const_val_q1_True = True
 const_val_q1_False = False
 const_val_q1_zero = 0
 const_val_q1_one = 1
+const_val_q1_fifteen = 15
 const_val_q1_empty_list = []
 const_val_q1_str1 = ""
 const_val_q1_str2 = "Hello, "
+const_val_q1_str3 = "!"
+const_val_q1_str4 = "...!"
 
-createGreeting :: T.Text -> T.Text
-createGreeting name = "Hello, " <> T.take 15 name <> end
-  where
-    end = if T.length name > 15
-            then "...!"
-            else "!"
-
--- Define the main function using the helper function
 greetText :: T.Text -> T.Text
-greetText = createGreeting
+greetText name = (T.pack const_val_q1_str2) <> (T.take 15 name) <> end
+    where end = if (T.length name <= const_val_q1_fifteen)
+                    then T.pack (const_val_q1_str3)
+                else T.pack (const_val_q1_str4)
 
 ------------------------------------------------------------------------------
 -- Ex 2: Capitalize every second word of a Text.
@@ -66,10 +64,20 @@ shout = T.unwords . zipWith ($) (cycle [T.toUpper, id]) . T.words
 --   longestRepeat (T.pack "") ==> 0
 --   longestRepeat (T.pack "aabbbbccc") ==> 4
 
-longestRepeat :: T.Text -> Int
-longestRepeat text
-  | T.null text = 0
+const_val_q3_True = True
+const_val_q3_False = False
+const_val_q3_zero = 0
+const_val_q3_one = 1
+const_val_q3_empty_list = []
+const_val_q3_str1 = ""
+
+longestRepeatCalculation :: T.Text -> Int
+longestRepeatCalculation text
+  | T.null text = const_val_q3_zero
   | otherwise = maximum $ map T.length $ T.group text
+
+longestRepeat :: T.Text -> Int
+longestRepeat = longestRepeatCalculation
 
 ------------------------------------------------------------------------------
 -- Ex 4: Given a lazy (potentially infinite) Text, extract the first n
@@ -93,10 +101,23 @@ takeStrict n = T.pack . TL.unpack . TL.take n
 --   byteRange (B.pack []) ==> 0
 --   byteRange (B.pack [3]) ==> 0
 
-byteRange :: B.ByteString -> Word8
-byteRange bs
-  | B.null bs = 0
+const_val_q5_True = True
+const_val_q5_False = False
+const_val_q5_zero = 0
+const_val_q5_one = 1
+const_val_q5_empty_list = []
+const_val_q5_str1 = ""
+
+getMinusResult :: Int -> Int -> Int
+getMinusResult a b = a - b 
+
+calculateByteRange :: B.ByteString -> Word8
+calculateByteRange bs
+  | B.null bs = const_val_q5_zero
   | otherwise = B.maximum bs - B.minimum bs
+
+byteRange :: B.ByteString -> Word8
+byteRange = calculateByteRange
 
 ------------------------------------------------------------------------------
 -- Ex 6: Compute the XOR checksum of a ByteString. The XOR checksum of
@@ -147,6 +168,8 @@ countUtf8Chars bs = case decodeUtf8' bs of
 --   BL.unpack (BL.take 20 (pingpong (B.pack [0,1,2])))
 --     ==> [0,1,2,2,1,0,0,1,2,2,1,0,0,1,2,2,1,0,0,1]
 
-pingpong :: B.ByteString -> BL.ByteString
-pingpong bs = BL.cycle (BL.fromStrict bs <> BL.reverse (BL.fromStrict bs))
+createPingPongPattern :: B.ByteString -> BL.ByteString
+createPingPongPattern bs = BL.cycle (BL.fromStrict bs <> BL.reverse (BL.fromStrict bs))
 
+pingpong :: B.ByteString -> BL.ByteString
+pingpong = createPingPongPattern

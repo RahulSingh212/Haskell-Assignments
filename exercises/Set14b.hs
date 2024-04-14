@@ -21,6 +21,9 @@ import Data.Text.Encoding (encodeUtf8)
 import Text.Read (readMaybe)
 
 -- HTTP server
+import Network.Wai
+import Network.HTTP.Types.Status
+import Network.HTTP.Types.Header
 import Network.Wai (pathInfo, responseLBS, Application)
 import Network.Wai.Handler.Warp (run)
 import Network.HTTP.Types (status200)
@@ -60,32 +63,31 @@ import Database.SQLite.Simple (open,execute,execute_,query,query_,Connection,Que
 --   Set14b> query_ db getAllQuery :: IO [(String,Int)]
 --   [("xxx",13),("yyy",5),("xxx",7)]
 
+const_val_q1_True = True
+const_val_q1_False = False
+const_val_q1_zero = 0
+const_val_q1_one = 1
+const_val_q1_empty_list = []
+const_val_q1_str1 = ""
+const_val_q1_str2 = "CREATE TABLE IF NOT EXISTS events (account TEXT NOT NULL, amount NUMBER NOT NULL);"
+const_val_q1_str3 = "INSERT INTO events (account, amount) VALUES (?, ?);"
 
 initQuery :: Query
-initQuery = Query (T.pack "CREATE TABLE IF NOT EXISTS events (account TEXT NOT NULL, amount NUMBER NOT NULL);")
+initQuery = Query (T.pack const_val_q1_str2)
 
 depositQuery :: Query
-depositQuery = Query (T.pack "INSERT INTO events (account, amount) VALUES (?, ?);")
+depositQuery = Query (T.pack const_val_q1_str3)
 
-getAllQuery :: Query
-getAllQuery = Query (T.pack "SELECT account, amount FROM events;")
-
--- openDatabase should open an SQLite database using the given
--- filename, run initQuery on it, and produce a database Connection.
---
--- NOTE! Do not add anything to the name, otherwise you'll get weird
--- test failures later.
 openDatabase :: String -> IO Connection
 openDatabase filename = do
   conn <- open filename
   execute_ conn initQuery
   return conn
 
--- given a db connection, an account name, and an amount, deposit
--- should add an (account, amount) row into the database
 deposit :: Connection -> T.Text -> Int -> IO ()
-deposit conn account amount =
-  execute conn depositQuery (account, amount) >> return ()
+deposit conn account amount = do
+  execute conn depositQuery (account, amount)
+  return ()
 
 ------------------------------------------------------------------------------
 -- Ex 2: Fetching an account's balance. Below you'll find
@@ -112,12 +114,24 @@ deposit conn account amount =
 --   Set14b> balance db (T.pack "zzz")
 --   0
 
+const_val_q2_True = True
+const_val_q2_False = False
+const_val_q2_zero = 0
+const_val_q2_one = 1
+const_val_q2_empty_list = []
+const_val_q2_str1 = ""
+const_val_q2_str2 = "SELECT amount FROM events WHERE account = ?;"
+
 balanceQuery :: Query
-balanceQuery = Query (T.pack "SELECT amount FROM events WHERE account = ?;")
+balanceQuery = Query (T.pack const_val_q2_str2)
+
+calculateBalance :: [[Int]] -> Int
+calculateBalance result = sum $ map sum result
 
 balance :: Connection -> T.Text -> IO Int
-balance db account = do r <- query db balanceQuery [account] :: IO [[Int]]
-                        return $ sum $ map sum r
+balance db account = do
+    result <- query db balanceQuery [account] :: IO [[Int]]
+    return $ calculateBalance result
 
 ------------------------------------------------------------------------------
 -- Ex 3: Now that we have the database part covered, let's think about
@@ -149,6 +163,19 @@ balance db account = do r <- query db balanceQuery [account] :: IO [[Int]]
 --   parseCommand [T.pack "deposit", T.pack "madoff", T.pack "123456"]
 --     ==> Just (Deposit "madoff" 123456)
 
+const_val_q3_True = True
+const_val_q3_False = False
+const_val_q3_zero = 0
+const_val_q3_one = 1
+const_val_q3_empty_list = []
+const_val_q3_str1 = ""
+const_val_q3_str2 = "balance"
+const_val_q3_str3 = "deposit"
+const_val_q3_str4 = "withdraw"
+
+getStringCompare :: String -> String -> Bool
+getStringCompare str1 str2 = str1 == str2
+
 data Command = Deposit T.Text Int | Balance T.Text | Withdraw T.Text Int
   deriving (Show, Eq)
 
@@ -156,14 +183,17 @@ parseInt :: T.Text -> Maybe Int
 parseInt = readMaybe . T.unpack
 
 parseCommand :: [T.Text] -> Maybe Command
-parseCommand (x:y:[])   = if T.unpack x == "balance" then Just (Balance y) else Nothing
-parseCommand (x:y:z:[]) = parseInt z
-                          >>=
-                          \amt -> case (T.unpack x) of
-                                    "deposit"  -> Just (Deposit y amt)
-                                    "withdraw" -> Just (Withdraw y amt)
-                                    unknown    -> Nothing
-parseCommand _          = Nothing
+parseCommand [x, y] =
+  if getStringCompare (T.unpack x) const_val_q3_str2
+    then Just (Balance y)
+    else Nothing
+parseCommand [x, y, z] = do
+  amt <- parseInt z
+  case T.unpack x of
+    "deposit" -> Just (Deposit y amt)
+    "withdraw" -> Just (Withdraw y amt)
+    _ -> Nothing
+parseCommand _ = Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 4: Running commands. Implement the IO operation perform that takes a
@@ -188,14 +218,23 @@ parseCommand _          = Nothing
 --   Set14b> perform db (Just (Balance (T.pack "unknown")))
 --   "0"
 
+const_val_q4_True = True
+const_val_q4_False = False
+const_val_q4_zero = 0
+const_val_q4_one = 1
+const_val_q4_empty_list = []
+const_val_q4_str1 = ""
+const_val_q4_str2 = "OK"
+const_val_q4_str3 = "ERROR"
+
 perform :: Connection -> Maybe Command -> IO T.Text
 perform db (Just (Deposit acc amt))  = do deposit db acc amt
-                                          return $ T.pack "OK"
+                                          return $ T.pack const_val_q4_str2
 perform db (Just (Withdraw acc amt)) = do deposit db acc (-amt)
-                                          return $ T.pack "OK"
+                                          return $ T.pack const_val_q4_str2
 perform db (Just (Balance acc))      = do b <- balance db acc
                                           return $ T.pack (show b)
-perform _ Nothing                    = return $ T.pack "ERROR"
+perform extra Nothing = return $ T.pack const_val_q4_str3
 
 ------------------------------------------------------------------------------
 -- Ex 5: Next up, let's set up a simple HTTP server. Implement a WAI
@@ -209,14 +248,29 @@ perform _ Nothing                    = return $ T.pack "ERROR"
 --   - In GHCi: run 8899 simpleServer
 --   - Go to <http://localhost:8899> in your browser, you should see the text BANK
 
+const_val_q5_True = True
+const_val_q5_False = False
+const_val_q5_zero = 0
+const_val_q5_one = 1
+const_val_q5_empty_list = []
+const_val_q5_str1 = ""
+const_val_q5_str2 = "BANK"
+const_val_q5_str3 = "text/plain"
+
 encodeResponse :: T.Text -> LB.ByteString
 encodeResponse t = LB.fromStrict (encodeUtf8 t)
 
--- Remember:
--- type Application = Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 simpleServer :: Application
 simpleServer request respond =
-  respond (responseLBS status200 [] (encodeResponse (T.pack "BANK")))
+  let responseText = T.pack const_val_q5_str2
+      encodedResponse = encodeResponse responseText
+      responseHeaders = [(hContentType, const_val_q5_str3)]
+      response = responseLBS status200 
+        (map (\(header, value) -> 
+          (header, encodeUtf8 (T.pack value))) 
+          responseHeaders) 
+          encodedResponse
+  in respond response
 
 ------------------------------------------------------------------------------
 -- Ex 6: Now we finally have all the pieces we need to actually
@@ -242,22 +296,34 @@ simpleServer request respond =
 --   - Open <http://localhost:3421/balance/lopez> in your browser.
 --     You should see the text 25.
 
+const_val_q6_True = True
+const_val_q6_False = False
+const_val_q6_zero = 0
+const_val_q6_one = 1
+const_val_q6_empty_list = []
+const_val_q6_str1 = ""
+const_val_q6_str2 = "bank.db"
+const_val_q6_str3 = "Running on port: "
+
 -- Remember:
 -- type Application = Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 server :: Connection -> Application
-server db request respond = do let xs = pathInfo request
-                               r <- perform db (parseCommand xs)
-                               let resp = encodeResponse $ r
-                               respond (responseLBS status200 [] resp) 
+server db request respond = do
+  let xs = pathInfo request
+  result <- perform db (parseCommand xs)
+  let responseText = encodeResponse result
+      responseHeaders = []
+      response = 
+        responseLBS status200 responseHeaders responseText
+  respond response
 
 port :: Int
 port = 3421
 
 main :: IO ()
 main = do
-  db <- openDatabase "bank.db"
-  putStr "Running on port: "
-  print port
+  db <- openDatabase const_val_q6_str2
+  putStrLn $ const_val_q6_str3 ++ show port
   run port (server db)
 
 ------------------------------------------------------------------------------
